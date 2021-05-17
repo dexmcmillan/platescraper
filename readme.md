@@ -33,7 +33,7 @@ Templates files contain a few common, required components:
         * *headless*: Boolean that tells Puppeteer to run in either headless (no GUI) or headful mode. Headful mode is useful for debugging.
         * *slowMo*: Slow your code down a bit if you're running intense scraping operations. Specify number in milliseconds.
         * *defaultViewport*: Set the size of the viewport when running Puppeteer in headful mode.
-    * *template*: Here's where the magic happens. Each property in this object will represent a property in the output JSON file. Each property contains:
+    * *template*: Here's where the magic happens. Each property in this object will become a property in the result JSON. Each property contains a few fields:
         * *type*: Either single_field, table or form. Table will iterate through a table in your unit while single_field will grab the text of a one DOM object. Form will look through the first two columns of a table, grabbing the first column as the key and the second column as the value. Useful for grabbing an entire table of results where there may not be clearly marked table rows.
 
 
@@ -62,7 +62,8 @@ Templates files contain a few common, required components:
             "selector": ".table"
         }
         ```
-
+        
+        * *replace*: Specify text you'd like platescraper to replace for you in this field.
         * *selector*: The selector that is chosen. Should be relative to the unit specified.
         * *table_selector*: Should represent each row in your table, whether they be divs, trs, or lis.
     * *urls*: A list of urls in string format. When the scrape is executed, each url will be visited and the same scrape operation will be run. In the case of one website where pagination is used and is not controlled through the url (ie. .NET apps), there should be a list of one url specified here.
