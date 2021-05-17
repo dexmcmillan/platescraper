@@ -1,12 +1,12 @@
 {
     "template_name": "lobbying",
-    "pages": 2,
-    "next_page_button": "span.pull-right:nth-child(2) > ul:nth-child(1) > li:nth-child(6) > a:nth-child(1)",
+    "pages": 1,
+    "next_page_button": "",
     "unit": "page",
     "settings": {
-        "speed": 1,
+        "speed": 3,
         "maximum_tries": 5,
-        "save_as": "data-lobbying.json",
+        "save_as": "lobbying.json",
         "puppeteerOptions": {
             "headless": false,
             "slowMo": 0,
@@ -14,14 +14,12 @@
         }
     },
     "template": {
-        "name": {
-            "type": "single_field",
-            "selector": "strong span:nth-child(2)"
-        },
-        "officer": {
-            "type": "single_field",
-            "selector": "div.small > strong"
+        "all": {
+            "type": "form",
+            "selector": ".table"
         }
     },
-    "urls": ["https://lobbycanada.gc.ca/app/secure/ocl/lrs/do/advSrch?V_SEARCH.command=navigate&time=1621266275601"]
+    "urls": [
+
+    ]
 }

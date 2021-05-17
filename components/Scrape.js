@@ -35,6 +35,8 @@ class Scrape {
 
         let template = JSON.parse(fs.readFileSync(`./templates/${templateName}.json`).toString())
 
+        console.log(template)
+
         this.template_name = template.template_name
         this.template = template.template
         this.maximum_tries = template.settings.maximum_tries
@@ -45,22 +47,20 @@ class Scrape {
         this.next_page_button = template.next_page_button
         this.unit = template.unit
 
-        this.saveAs = template.settings.save_as
+        this.save_as = template.settings.save_as
         this.save_stream = fs.createWriteStream(`./output/${this.save_as}`)
 
-        if (template.urls.length === 0) {
-            throw "Please specify urls to be scraped."
-        }
+        console.log(this.unit)
 
         return this
     }
 
     // This method is one of the primary methods for scraping pages.
     // It takes an array of urls and goes through each of them asynchronously (with limits) to grab information.
-    async urls() {
+    async run(urls=this.urlList) {
 
         // Chunks urls for async scraping.
-        const urlChunks = await _.chunk(this.urlList, this.speed)
+        const urlChunks = await _.chunk(urls, this.speed)
 
         // New puppeteer browser instance.
         const browser = await p.launch(this.puppeteerOptions);
@@ -79,6 +79,7 @@ class Scrape {
                     while (timesFailed <= this.maximum_tries) {
 
                         const page = await browser.newPage();
+                        page.on('console', consoleObj => console.log(consoleObj.text()));
 
                         try {
                             await Promise.all([
@@ -107,9 +108,6 @@ class Scrape {
                             timesFailed++
                         }
 
-
-
-
                     }
                 })
 
@@ -124,61 +122,126 @@ class Scrape {
         return JSON.stringify(this.results)
     }
 
+    async urls(url, selector) {
+
+        // New puppeteer browser instance.
+        const browser = await p.launch(this.puppeteerOptions);
+
+        let timesFailed = 0
+
+        const promise = await new Promise(async (resolve) => {
+            while (timesFailed <= this.maximum_tries) {
+
+                const page = await browser.newPage();
+                page.on('console', consoleObj => console.log(consoleObj.text()));
+
+                try {
+                    await Promise.all([
+                        page.goto(url),
+                        page.waitForNavigation({ waitUntil: "networkidle0" })
+                    ])
+
+                    const urls = await page.evaluate((selector) => {
+
+                        const urlsArray = []
+
+                        const rows = document.querySelectorAll(selector)
+
+                        rows.forEach(row => {
+                            const link = row.href
+                            urlsArray.push(link)
+                        })
+
+                        return urlsArray
+
+                    }, selector)
+
+                    page.close()
+                    return resolve(urls)
+                } catch (err) {
+                    console.log(err)
+                    timesFailed++
+                }
+
+
+
+
+            }
+        })
+        browser.close()
+        return promise
+    }
+
     async scrapePage(page) {
-        
+
         const pageResults = await page.evaluate(async (template, unit) => {
             const pageResults = []
-            
-            if (unit === "page" | unit === "") {
-                const record = {}
-    
-                    // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
-                    for (const field of Object.entries(template)) {
-    
-                        if (field[1].type === "single_field") {
-    
-                            record[field[0]] = document.querySelector(field[1].selector).innerText
-                            record[field[0]] = record[field[0]].replace(field[1].replace, "")
-                            record.scrapedAt = new Date().toLocaleString()
-    
-                        }
-    
-                        else if (field[1].type === "table") {
-    
-                            const rows = document.querySelectorAll(`${field[1].table_selector}`)
-    
-                            rows.forEach(row => {
-                                let subfield = {}
-                                for (const row_field of Object.entries(field[1].row_object_template)) {
-                                    subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
-                                }
-                                record[field[0]].push(subfield)
-                            })
-    
-                        }
-    
+
+            console.log("Start of evaluate.")
+
+            if (unit === "page") {
+                let record = {}
+                console.log("It's a page!")
+                // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
+                for (const field of Object.entries(template)) {
+
+                    if (field[1].type === "single_field") {
+
+                        record[field[0]] = document.querySelector(field[1].selector).innerText
+                        record[field[0]] = record[field[0]].replace(field[1].replace, "")
+                        
                     }
-                    pageResults.push(record)
+
+                    else if (field[1].type === "table") {
+
+                        const rows = document.querySelectorAll(`${field[1].table_selector}`)
+
+                        rows.forEach(row => {
+                            let subfield = {}
+                            for (const row_field of Object.entries(field[1].row_object_template)) {
+                                subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
+                            }
+                            record[field[0]].push(subfield)
+                        })
+
+                    }
+                    else if (field[1].type === "form") {
+                        
+                        const rows = document.querySelectorAll(`${field[1].selector} tr`)
+
+                        rows.forEach(row => {
+                            
+                            const key = row.querySelector("td:nth-child(1)").innerText.toLowerCase().replace(/\s/, "_")
+
+                            record[key] = row.querySelector("td:nth-child(2)").innerText.replace(/\n/, " ")
+                            
+                            pageResults.push(record)
+                        })
+                    }
+
+                }
+                record.scrapedAt = new Date().toLocaleString()
+                pageResults.push(record)
             }
             else {
                 for (const item of rows) {
                     const record = {}
-    
+
                     // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
                     for (const field of Object.entries(template)) {
-    
+
                         if (field[1].type === "single_field") {
-    
+
                             record[field[0]] = item.querySelector(field[1].selector).innerText
                             record[field[0]] = record[field[0]].replace(field[1].replace, "")
                             record.scrapedAt = new Date().toLocaleString()
-    
+
                         }
-    
+
                         else if (field[1].type === "table") {
-    
+
                             const rows = item.querySelectorAll(`${field[1].table_selector}`)
-    
+
                             rows.forEach(row => {
                                 let subfield = {}
                                 for (const row_field of Object.entries(field[1].row_object_template)) {
@@ -186,20 +249,38 @@ class Scrape {
                                 }
                                 record[field[0]].push(subfield)
                             })
-    
+
                         }
+                        else if (field[1].type === "form") {
+
+                            const rows = item.querySelectorAll(`${field[1].selector} tr`)
+
+                            rows.forEach(row => {
+                                
+                                const key = row.querySelector("td:nth-child(1)").innerText.toLowerCase().replace(/\s/, "_")
     
+                                record[key] = row.querySelector("td:nth-child(2)").innerText.replace(/\n/, " ")
+                                
+                                pageResults.push(record)
+                            })
+                        }
+
                     }
+                    record.scrapedAt = new Date().toLocaleString()
                     pageResults.push(record)
                 }
             }
-            
+
 
             return pageResults
 
         }, this.template, this.unit)
 
         return pageResults
+    }
+
+    async scrapeTable() {
+
     }
 
     // This is the logic behind how the Scrape class takes in the template, finds info on the page, and returns it.

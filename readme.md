@@ -44,18 +44,18 @@ Templates files contain a few common, required components:
         * *slowMo*: Slow your code down a bit if you're running intense scraping operations. Specify number in milliseconds.
         * *defaultViewport*: Set the size of the viewport when running Puppeteer in headful mode.
     * *template*: Here's where the magic happens. Each property in this object will represent a property in the output JSON file. Each property contains:
-        * *type*: Either single_field or table. Table will iterate through a table in your unit while single_field will grab the text of a one DOM object.
+        * *type*: Either single_field, table or form. Table will iterate through a table in your unit while single_field will grab the text of a one DOM object. Form will look through the first two columns of a table, grabbing the first column as the key and the second column as the value. Useful for grabbing an entire table of results where there may not be clearly marked table rows.
 
 
         ```javascript
 
-        // single_field object.
+        // single_field object
         "name": {
             "type": "single_field",
             "selector": "strong span:nth-child(2)"
         }
 
-        // table object.
+        // table object
         "specialties": {
             "type": "table",
             "table_selector": "#specialties > table:nth-child(2) > tbody > tr",
@@ -64,6 +64,12 @@ Templates files contain a few common, required components:
                 "issued_on": "td:nth-child(2)",
                 "type": "td:nth-child(3)"
             }
+        }
+
+        // form object. The name of this property is irrelevant.
+        "all": {
+            "type": "form",
+            "selector": ".table"
         }
         ```
 
