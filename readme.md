@@ -10,16 +10,6 @@ Platescraper is useful for one of three common scrape jobs:
 * Scraping many pages with unique urls but identical structure.
 * Scraping tabular data from paginated web apps.
 
-It currently can't scrape:
-* Pages or apps where the data cannot be accessed by going to a URL (ie. web apps where you need to click "search" first).
-* Pages that don't allow you to crawl them (duh).
-
-### Getting started
-
-```
-npm install
-```
-
 ### Templates
 
 Each template contains everything needed to run one of a few types of common scrape projects.
