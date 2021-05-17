@@ -1,0 +1,55 @@
+{
+    "template_name": "doctor",
+    "settings": {
+        "speed": 3,
+        "maximum_tries": 5,
+        "saveAs": "data.json",
+        "puppeteerOptions": {
+            "headless": false,
+            "slowMo": 0,
+            "defaultViewport": null
+        }
+    },
+    "template": {
+        "name": {
+            "type": "single_field",
+            "selector": "#docTitle",
+            "replace": ""
+        },
+        "gender": {
+            "type": "single_field",
+            "selector": ".info > p:nth-child(2)",
+            "replace": "Gender: "
+        },
+        "languages": {
+            "type": "single_field",
+            "selector": ".info > p:nth-child(3)",
+            "replace": "Languages Spoken: "
+        },
+        "specialties": {
+            "type": "table",
+            "table_selector": "#specialties > table:nth-child(2) > tbody",
+            "row_object_template": {
+                "specialty": "td:nth-child(1)",
+                "issued_on": "td:nth-child(2)",
+                "type": "td:nth-child(3)"
+            }
+        }
+    },
+    "urls": [
+        "https://doctors.cpso.on.ca/DoctorDetails/Okechukwu-Emmanuel-Abara/0036064-50040",
+        "https://doctors.cpso.on.ca/DoctorDetails/Walid-Abawi/0048707-62685",
+        "https://doctors.cpso.on.ca/DoctorDetails/Ahmed-Mohamed-Kamel-Abaza/0326014-117078",
+        "https://doctors.cpso.on.ca/DoctorDetails/Farzad-Abbaspourraddakheli/0333654-125049",
+        "https://doctors.cpso.on.ca/DoctorDetails/Ali---Hosni-Ali-Abdalaty/0289738-102279",
+        "https://doctors.cpso.on.ca/DoctorDetails/Amina-Abdalla/0295524-103354",
+        "https://doctors.cpso.on.ca/DoctorDetails/Mohamed---Ali-Abdulrehman-Abdalla/0246710-88196",
+        "https://doctors.cpso.on.ca/DoctorDetails/Faraj---Wahib-Abdallah/0255998-90886",
+        "https://doctors.cpso.on.ca/DoctorDetails/Noha-Mohamed-Rady-Abdel-Gawad/0330026-120381",
+        "https://doctors.cpso.on.ca/DoctorDetails/Farid---Mostafa-Abdel-Hadi/0235932-85555",
+        "https://doctors.cpso.on.ca/DoctorDetails/Abdel---Meguid-Kamel-Abdel-Meguid/0267815-95015",
+        "https://doctors.cpso.on.ca/DoctorDetails/Karim-AbdelAty/0304737-107979",
+        "https://doctors.cpso.on.ca/DoctorDetails/Maximous---Youssef-Meikael-AbdelMalek/0158881-75282"
+    ]
+    
+}

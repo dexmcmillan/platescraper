@@ -1,0 +1,243 @@
+const p = require('puppeteer')
+const _ = require('lodash')
+const fs = require('fs')
+
+class Scrape {
+
+    results = []
+
+    // Urls will be loaded into here on object construction.
+    urlList = []
+
+    // Defines how information is collected off the page, and how it's structured.
+    template;
+
+    // Specifies the maximum number of async calls the scrape should make.
+    speed;
+
+    // The maximum number of times a page will error out and retry itself before stopping.
+    maximum_tries;
+
+    // This is the location where the output file will be saved.
+    save_as;
+
+    // The puppeteer options.
+    puppeteerOptions = {};
+
+    next_page_button;
+
+    pages;
+
+    unit;
+    save_stream;
+
+    constructor(templateName) {
+
+        let template = JSON.parse(fs.readFileSync(`./templates/${templateName}.json`).toString())
+
+        this.template_name = template.template_name
+        this.template = template.template
+        this.maximum_tries = template.settings.maximum_tries
+        this.speed = template.settings.speed
+        this.urlList = template.urls
+        this.puppeteerOptions = template.settings.puppeteerOptions
+        this.pages = template.pages
+        this.next_page_button = template.next_page_button
+        this.unit = template.unit
+
+        this.saveAs = template.settings.save_as
+        this.save_stream = fs.createWriteStream(`./output/${this.save_as}`)
+
+        if (template.urls.length === 0) {
+            throw "Please specify urls to be scraped."
+        }
+
+        return this
+    }
+
+    // This method is one of the primary methods for scraping pages.
+    // It takes an array of urls and goes through each of them asynchronously (with limits) to grab information.
+    async urls() {
+
+        // Chunks urls for async scraping.
+        const urlChunks = await _.chunk(this.urlList, this.speed)
+
+        // New puppeteer browser instance.
+        const browser = await p.launch(this.puppeteerOptions);
+
+        // For each one of the url chunks...
+        for (const chunk of urlChunks) {
+
+            const promises = []
+            let timesFailed = 0
+
+            // ...go through each url.
+            chunk.forEach(url => {
+
+                // ...create a new promise to grab the required info from the scrape template...
+                const promise = new Promise(async (resolve) => {
+                    while (timesFailed <= this.maximum_tries) {
+
+                        const page = await browser.newPage();
+
+                        try {
+                            await Promise.all([
+                                page.goto(url),
+                                page.waitForNavigation({ waitUntil: "networkidle0" })
+                            ])
+
+
+                            for (let pageNum = 1; pageNum <= this.pages; pageNum++) {
+
+                                var records = await this.scrapePage(page)
+                                if (this.pages > 1 && pageNum !== this.pages) {
+                                    await Promise.all([
+                                        page.click(this.next_page_button),
+                                        page.waitForNavigation({ waitUntil: "networkidle0" })
+                                    ])
+                                }
+                                records.map(el => this.results.push(el))
+                            }
+
+                            page.close()
+                            console.log(this.results)
+                            return resolve(JSON.stringify(this.results))
+                        } catch (err) {
+                            console.log(err)
+                            timesFailed++
+                        }
+
+
+
+
+                    }
+                })
+
+                promises.push(promise)
+
+            })
+
+            await Promise.all(promises)
+
+        }
+        browser.close()
+        return JSON.stringify(this.results)
+    }
+
+    async scrapePage(page) {
+        
+        const pageResults = await page.evaluate(async (template, unit) => {
+            const pageResults = []
+            
+            if (unit === "page" | unit === "") {
+                const record = {}
+    
+                    // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
+                    for (const field of Object.entries(template)) {
+    
+                        if (field[1].type === "single_field") {
+    
+                            record[field[0]] = document.querySelector(field[1].selector).innerText
+                            record[field[0]] = record[field[0]].replace(field[1].replace, "")
+                            record.scrapedAt = new Date().toLocaleString()
+    
+                        }
+    
+                        else if (field[1].type === "table") {
+    
+                            const rows = document.querySelectorAll(`${field[1].table_selector}`)
+    
+                            rows.forEach(row => {
+                                let subfield = {}
+                                for (const row_field of Object.entries(field[1].row_object_template)) {
+                                    subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
+                                }
+                                record[field[0]].push(subfield)
+                            })
+    
+                        }
+    
+                    }
+                    pageResults.push(record)
+            }
+            else {
+                for (const item of rows) {
+                    const record = {}
+    
+                    // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
+                    for (const field of Object.entries(template)) {
+    
+                        if (field[1].type === "single_field") {
+    
+                            record[field[0]] = item.querySelector(field[1].selector).innerText
+                            record[field[0]] = record[field[0]].replace(field[1].replace, "")
+                            record.scrapedAt = new Date().toLocaleString()
+    
+                        }
+    
+                        else if (field[1].type === "table") {
+    
+                            const rows = item.querySelectorAll(`${field[1].table_selector}`)
+    
+                            rows.forEach(row => {
+                                let subfield = {}
+                                for (const row_field of Object.entries(field[1].row_object_template)) {
+                                    subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
+                                }
+                                record[field[0]].push(subfield)
+                            })
+    
+                        }
+    
+                    }
+                    pageResults.push(record)
+                }
+            }
+            
+
+            return pageResults
+
+        }, this.template, this.unit)
+
+        return pageResults
+    }
+
+    // This is the logic behind how the Scrape class takes in the template, finds info on the page, and returns it.
+    // async scrapeRecord(record_row, template) {
+
+    //     const record = new Record()
+
+    //     // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
+    //     for (const field of Object.entries(template)) {
+
+    //         if (field[1].type === "single_field") {
+
+    //             record.result[field[0]] = record_row.querySelector(field[1].selector).innerText
+    //             console.log(record.result[field[0]])
+    //             record.result[field[0]] = record.result[field[0]].replace(field[1].replace, "")
+    //             record.result.scrapedAt = new Date().toLocaleString()
+
+    //         }
+
+    //         else if (field[1].type === "table") {
+
+    //             const rows = record_row.querySelectorAll(`${field[1].table_selector}`)
+
+    //             rows.forEach(row => {
+    //                 let subfield = {}
+    //                 for (const row_field of Object.entries(field[1].row_object_template)) {
+    //                     subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
+    //                 }
+    //                 record.result[field[0]].push(subfield)
+    //             })
+
+    //         }
+
+    //     }
+    //     console.log(record)
+    //     return record
+    // }
+
+};
+
+module.exports = { Scrape }
