@@ -6,7 +6,7 @@
     "settings": {
         "speed": 1,
         "maximum_tries": 5,
-        "saveAs": "data-lobbying.json",
+        "save_as": "data-lobbying.json",
         "puppeteerOptions": {
             "headless": false,
             "slowMo": 0,

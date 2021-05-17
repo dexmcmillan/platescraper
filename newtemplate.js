@@ -3,6 +3,8 @@ const fs = require('fs')
 
 const blanktemplate = {
     "template_name": argv.name,
+    "next_page_button": "span.pull-right:nth-child(2) > ul:nth-child(1) > li:nth-child(6) > a:nth-child(1)",
+    "unit": "page",
     "settings": {
         "speed": 3,
         "maximum_tries": 5,
