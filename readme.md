@@ -1,10 +1,18 @@
 # Template Scrape
 
-An app that turns scrape templates into data. Based off the puppeteer browser automation library. It's designed with speed and clarity in mind, so those with minimal understanding of javascript can follow the logic of scrapes and see how the scraped data was constructed by viewing one JSON file.
+An app that turns JSON scrape templates into the data you want, the template scraper is designed with three guiding principles in mind:
+* You should be able to execute common scrape patterns with minimal duplicated effort.
+* Those with only basic understanding of Javascript can write scrape templates.
+* Others can see how the data was gathered **by viewing one JSON file**.
 
-Often a team of people will want to collaborate on a scrape to determine the best structure for the resulting data. This app hopes to solve that problem.
+This template scraper is useful for one of three common scrape jobs:
+* Scraping one page that contains all the data you need.
+* Scraping many pages with unique urls but identical structure.
+* Scraping tabular data from paginated web apps.
 
-The scrape iterates through a list of urls given and runs Scrape.scrapePage(), which collects data and structures it according to the specified template file.
+It currently can't scrape:
+* Pages or apps where the data cannot be accessed by going to a URL (ie. web apps where you need to click "search" first).
+* Pages that don't allow you to crawl them (duh).
 
 ### Getting started
 
@@ -12,17 +20,13 @@ The scrape iterates through a list of urls given and runs Scrape.scrapePage(), w
 npm install
 ```
 
-Create a new blank template.
-
-```
-npm run new --name NAMEHERE
-```
-
 ### Templates
 
-New templates can scaffolded properly using:
+Each template contains everything needed to run one of a few types of common scrape projects.
 
-```npm run new --name TEMPLATENAME``
+New templates can be scaffolded properly using:
+
+```npm run new --name TEMPLATENAME```
 
 TEMPLATENAME should be replaced with the name of your template (ie. carsforsale).
 
@@ -41,6 +45,7 @@ Templates files contain a few common, required components:
         * *defaultViewport*: Set the size of the viewport when running Puppeteer in headful mode.
     * *template*: Here's where the magic happens. Each property in this object will represent a property in the output JSON file. Each property contains:
         * *type*: Either single_field or table. Table will iterate through a table in your unit while single_field will grab the text of a one DOM object.
+
 
         ```javascript
 
