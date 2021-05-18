@@ -12,9 +12,7 @@ Platescraper is useful for one of three common scrape jobs:
 
 ### Templates
 
-Each template contains everything needed to run one of a few types of common scrape projects.
-
-New templates can be scaffolded properly using:
+Each template contains everything needed to run one of a few types of common scrape projects. New templates can be scaffolded properly using:
 
 ```npm run new --name TEMPLATENAME```
 

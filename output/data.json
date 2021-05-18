@@ -1,0 +1,176 @@
+[
+    {
+        "name": "Abaza, Ahmed Mohamed Kamel",
+        "gender": "Male",
+        "languages": "Arabic, English",
+        "specialties": [
+            {
+                "specialty": "Pediatrics",
+                "issued_on": "Effective:13 Jun 2019",
+                "type": "RCPSC Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:20 PM"
+    },
+    {
+        "name": "Abawi, Walid",
+        "gender": "Male",
+        "languages": "English, Persian",
+        "specialties": [
+            {
+                "specialty": "General Surgery",
+                "issued_on": "Effective:07 Nov 1995",
+                "type": "RCPSC Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:20 PM"
+    },
+    {
+        "name": "Abara, Okechukwu Emmanuel",
+        "gender": "Male",
+        "languages": "English, Ibo",
+        "specialties": [
+            {
+                "specialty": "Urology",
+                "issued_on": "Effective:16 Nov 1988",
+                "type": "RCPSC Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:20 PM"
+    },
+    {
+        "name": "Abdalla, Amina",
+        "gender": "Female",
+        "languages": "English, Swahili",
+        "specialties": [
+            {
+                "specialty": "Psychiatry",
+                "issued_on": "Effective:07 Apr 2021",
+                "type": "CPSO Recognized Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:22 PM"
+    },
+    {
+        "name": "Abdalaty, Ali Hosni Ali",
+        "gender": "Male",
+        "languages": "English",
+        "specialties": [
+            {
+                "specialty": "Radiation Oncology",
+                "issued_on": "Effective:01 Jun 2017",
+                "type": "CPSO Recognized Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:22 PM"
+    },
+    {
+        "name": "Abbaspour-raddakheli, Farzad",
+        "gender": "Male",
+        "languages": "ENGLISH",
+        "specialties": [
+            {
+                "specialty": "Nuclear Medicine",
+                "issued_on": "Effective:07 Feb 2021",
+                "type": "RCPSC Specialist"
+            },
+            {
+                "specialty": "Nuclear Medicine",
+                "issued_on": "Effective:14 Feb 2021",
+                "type": "RCPSC Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:22 PM"
+    },
+    {
+        "name": "Abdalla, Mohamed Ali Abdulrehman",
+        "gender": "Male",
+        "languages": "English, French, Swahili",
+        "specialties": [
+            {
+                "specialty": "Internal Medicine",
+                "issued_on": "Effective:30 Nov 2011",
+                "type": "CPSO Recognized Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:23 PM"
+    },
+    {
+        "name": "Abdallah, Faraj Wahib",
+        "gender": "Male",
+        "languages": "English",
+        "specialties": [
+            {
+                "specialty": "Anesthesiology",
+                "issued_on": "Effective:01 Jul 2017",
+                "type": "CPSO Recognized Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:24 PM"
+    },
+    {
+        "name": "Abdel Gawad, Noha Mohamed Rady",
+        "gender": "Female",
+        "languages": "Arabic, English",
+        "specialties": [
+            {
+                "specialty": "Psychiatry",
+                "issued_on": "Effective:15 Apr 2021",
+                "type": "CPSO Recognized Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:24 PM"
+    },
+    {
+        "name": "Abdel Hadi, Farid Mostafa",
+        "gender": "Male",
+        "languages": "Arabic, English",
+        "specialties": [
+            {
+                "specialty": "Obstetrics and Gynecology",
+                "issued_on": "Effective:30 Jun 2008",
+                "type": "RCPSC Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:26 PM"
+    },
+    {
+        "name": "Abdel Meguid, Abdel Meguid Kamel",
+        "gender": "Male",
+        "languages": "English",
+        "specialties": [
+            {
+                "specialty": "Family Medicine",
+                "issued_on": "Effective:14 Dec 2011",
+                "type": "CFPC Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:26 PM"
+    },
+    {
+        "name": "Abdel-Aty, Karim",
+        "gender": "Male",
+        "languages": "Arabic, English",
+        "specialties": [
+            {
+                "specialty": "Family Medicine",
+                "issued_on": "Effective:21 Sep 2015",
+                "type": "CPSO Recognized Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:26 PM"
+    },
+    {
+        "name": "Abdel-Malek, Maximous Youssef Meikael",
+        "gender": "Male",
+        "languages": "Arabic, English",
+        "specialties": [
+            {
+                "specialty": "Family Medicine",
+                "issued_on": "Effective:05 Jun 2000",
+                "type": "CFPC Specialist"
+            }
+        ],
+        "scrapedAt": "5/18/2021, 12:26:27 PM"
+    }
+]

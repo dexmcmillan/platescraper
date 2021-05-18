@@ -50,274 +50,212 @@ class Scrape {
         this.save_as = template.settings.save_as
         this.save_stream = fs.createWriteStream(`./output/${this.save_as}`)
 
-        console.log(this.unit)
+        console.log(`New scrape started!\nBased on template: ${this.template_name}.`)
 
         return this
     }
 
     // This method is one of the primary methods for scraping pages.
     // It takes an array of urls and goes through each of them asynchronously (with limits) to grab information.
-    async run(urls=this.urlList) {
+    async run(urls = this.urlList) {
+        return new Promise(async (resolve) => {
 
-        // Chunks urls for async scraping.
-        const urlChunks = await _.chunk(urls, this.speed)
+            // Chunks urls for async scraping.
+            const urlChunks = await _.chunk(urls, this.speed)
 
-        // New puppeteer browser instance.
-        const browser = await p.launch(this.puppeteerOptions);
+            // New puppeteer browser instance.
+            const browser = await p.launch(this.puppeteerOptions);
 
-        // For each one of the url chunks...
-        for (const chunk of urlChunks) {
+            // For each one of the url chunks...
+            for (const chunk of urlChunks) {
 
-            const promises = []
-            let timesFailed = 0
+                const promises = []
+                let timesFailed = 0
 
-            // ...go through each url.
-            chunk.forEach(url => {
+                // ...go through each url.
+                chunk.forEach(url => {
 
-                // ...create a new promise to grab the required info from the scrape template...
-                const promise = new Promise(async (resolve) => {
-                    while (timesFailed <= this.maximum_tries) {
+                    // ...create a new promise to grab the required info from the scrape template...
+                    const promise = new Promise(async (resolve) => {
+                        while (timesFailed <= this.maximum_tries) {
 
-                        const page = await browser.newPage();
-                        page.on('console', consoleObj => console.log(consoleObj.text()));
+                            const page = await browser.newPage();
+                            await page.exposeFunction('getRecord', this.getRecord);
+                            // page.on('console', consoleObj => console.log(consoleObj.text()));
 
-                        try {
-                            await Promise.all([
-                                page.goto(url),
-                                page.waitForNavigation({ waitUntil: "networkidle0" })
-                            ])
+                            try {
+                                await Promise.all([
+                                    page.goto(url),
+                                    page.waitForNavigation({ waitUntil: "networkidle0" })
+                                ])
 
 
-                            for (let pageNum = 1; pageNum <= this.pages; pageNum++) {
+                                for (let pageNum = 1; pageNum <= this.pages; pageNum++) {
 
-                                var records = await this.scrapePage(page)
-                                if (this.pages > 1 && pageNum !== this.pages) {
-                                    await Promise.all([
-                                        page.click(this.next_page_button),
-                                        page.waitForNavigation({ waitUntil: "networkidle0" })
-                                    ])
+                                    var records = await this.scrapePage(page)
+
+                                    if (this.pages > 1 && pageNum !== this.pages) {
+                                        try {
+                                            await Promise.all([
+                                                page.click(this.next_page_button),
+                                                page.waitForNavigation({ waitUntil: "networkidle0", timeout: 5000 })
+                                            ])
+                                        } catch {
+                                        }
+
+                                    }
+                                    records.map(el => this.results.push(el))
                                 }
-                                records.map(el => this.results.push(el))
+                                console.log(`Found ${this.results.length} records...`)
+                                page.close()
+                                return resolve(JSON.stringify(this.results))
+                            } catch (err) {
+                                console.log(err)
+                                timesFailed++
                             }
 
-                            page.close()
-                            console.log(this.results)
-                            return resolve(JSON.stringify(this.results))
-                        } catch (err) {
-                            console.log(err)
-                            timesFailed++
                         }
+                    })
 
-                    }
+                    promises.push(promise)
+
                 })
 
-                promises.push(promise)
+                await Promise.all(promises)
 
-            })
-
-            await Promise.all(promises)
-
-        }
-        browser.close()
-        return JSON.stringify(this.results)
+            }
+            browser.close()
+            return resolve(JSON.stringify(this.results))
+        })
     }
 
     async urls(url, selector) {
 
+        console.log("Grabbing urls...")
+
         // New puppeteer browser instance.
         const browser = await p.launch(this.puppeteerOptions);
 
-        let timesFailed = 0
+        const page = await browser.newPage();
+        page.on('console', consoleObj => console.log(consoleObj.text()));
 
-        const promise = await new Promise(async (resolve) => {
-            while (timesFailed <= this.maximum_tries) {
+        await Promise.all([
+            page.goto(url),
+            page.waitForNavigation({ waitUntil: "networkidle0" })
+        ])
 
-                const page = await browser.newPage();
-                page.on('console', consoleObj => console.log(consoleObj.text()));
+        const urls = await page.evaluate((selector) => {
 
-                try {
-                    await Promise.all([
-                        page.goto(url),
-                        page.waitForNavigation({ waitUntil: "networkidle0" })
-                    ])
+            const urlsArray = []
 
-                    const urls = await page.evaluate((selector) => {
+            const rows = document.querySelectorAll(selector)
 
-                        const urlsArray = []
+            rows.forEach(row => {
+                const link = row.href
+                urlsArray.push(link)
+            })
 
-                        const rows = document.querySelectorAll(selector)
+            return urlsArray
 
-                        rows.forEach(row => {
-                            const link = row.href
-                            urlsArray.push(link)
-                        })
+        }, selector)
 
-                        return urlsArray
+        await urls.map(el => this.urlList.push(el))
+        browser.close()
+        return this.urlList
+    }
 
-                    }, selector)
+    async getRecord(page, element = null) {
 
-                    page.close()
-                    return resolve(urls)
-                } catch (err) {
-                    console.log(err)
-                    timesFailed++
+        const pageResults = await page.evaluate(async (template, element) => {
+            let record = {}
+            // This checks whether or not the info to be scraped is a single entry, a table, or a form-style table to be scraped, as specified by the scrape template file.
+            for (const field of Object.entries(template)) {
+
+                if (element === null) {
+                    var rows = document.querySelectorAll(`${field[1].table_selector}`)
+                }
+                else {
+                    var rows = element.querySelectorAll(`${field[1].table_selector}`)
                 }
 
+                if (field[1].type === "single_field") {
+
+                    if (element === null) {
+                        record[field[0]] = document.querySelector(field[1].selector).innerText
+                    }
+                    else {
+                        record[field[0]] = element.querySelector(field[1].selector).innerText
+                    }
+
+                    record[field[0]] = record[field[0]].replace(field[1].replace, "")
+                }
+
+                else if (field[1].type === "table") {
+
+                    record[field[0]] = []
 
 
+
+                    rows.forEach(row => {
+
+                        let subfield = {}
+                        for (const row_field of Object.entries(field[1].row_object_template)) {
+                            subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
+                        }
+                        record[field[0]].push(subfield)
+
+                    })
+                }
+                else if (field[1].type === "form") {
+
+                    rows = document.querySelectorAll(`${field[1].selector} tr`)
+
+                    rows.forEach(row => {
+
+                        const key = row.querySelector("td:nth-child(1)").innerText.toLowerCase().replace(/\s/, "_")
+
+                        record[key] = row.querySelector("td:nth-child(2)").innerText.replace(/\n/, " ")
+
+
+                    })
+
+                }
 
             }
-        })
-        browser.close()
-        return promise
+            return record
+        }, this.template, element)
+        return pageResults
     }
 
     async scrapePage(page) {
 
-        const pageResults = await page.evaluate(async (template, unit) => {
-            const pageResults = []
+        page.on('console', consoleObj => console.log(consoleObj.text()));
 
-            console.log("Start of evaluate.")
 
-            if (unit === "page") {
-                let record = {}
-                console.log("It's a page!")
-                // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
-                for (const field of Object.entries(template)) {
+        let pageResults = []
 
-                    if (field[1].type === "single_field") {
+        if (this.unit === "page" || this.unit === "" || this.unit === null) {
 
-                        record[field[0]] = document.querySelector(field[1].selector).innerText
-                        record[field[0]] = record[field[0]].replace(field[1].replace, "")
-                        
-                    }
+            const record = await this.getRecord(page)
 
-                    else if (field[1].type === "table") {
+            record.scrapedAt = new Date().toLocaleString()
+            pageResults.push(record)
 
-                        const rows = document.querySelectorAll(`${field[1].table_selector}`)
+        }
+        else {
 
-                        rows.forEach(row => {
-                            let subfield = {}
-                            for (const row_field of Object.entries(field[1].row_object_template)) {
-                                subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
-                            }
-                            record[field[0]].push(subfield)
-                        })
+            const rows = await page.$$(this.unit)
 
-                    }
-                    else if (field[1].type === "form") {
-                        
-                        const rows = document.querySelectorAll(`${field[1].selector} tr`)
-
-                        rows.forEach(row => {
-                            
-                            const key = row.querySelector("td:nth-child(1)").innerText.toLowerCase().replace(/\s/, "_")
-
-                            record[key] = row.querySelector("td:nth-child(2)").innerText.replace(/\n/, " ")
-                            
-                            pageResults.push(record)
-                        })
-                    }
-
-                }
+            for (const item of rows) {
+                const record = await this.getRecord(page, item)
                 record.scrapedAt = new Date().toLocaleString()
                 pageResults.push(record)
+
             }
-            else {
-                for (const item of rows) {
-                    const record = {}
-
-                    // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
-                    for (const field of Object.entries(template)) {
-
-                        if (field[1].type === "single_field") {
-
-                            record[field[0]] = item.querySelector(field[1].selector).innerText
-                            record[field[0]] = record[field[0]].replace(field[1].replace, "")
-                            record.scrapedAt = new Date().toLocaleString()
-
-                        }
-
-                        else if (field[1].type === "table") {
-
-                            const rows = item.querySelectorAll(`${field[1].table_selector}`)
-
-                            rows.forEach(row => {
-                                let subfield = {}
-                                for (const row_field of Object.entries(field[1].row_object_template)) {
-                                    subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
-                                }
-                                record[field[0]].push(subfield)
-                            })
-
-                        }
-                        else if (field[1].type === "form") {
-
-                            const rows = item.querySelectorAll(`${field[1].selector} tr`)
-
-                            rows.forEach(row => {
-                                
-                                const key = row.querySelector("td:nth-child(1)").innerText.toLowerCase().replace(/\s/, "_")
-    
-                                record[key] = row.querySelector("td:nth-child(2)").innerText.replace(/\n/, " ")
-                                
-                                pageResults.push(record)
-                            })
-                        }
-
-                    }
-                    record.scrapedAt = new Date().toLocaleString()
-                    pageResults.push(record)
-                }
-            }
-
-
-            return pageResults
-
-        }, this.template, this.unit)
+        }
 
         return pageResults
     }
-
-    async scrapeTable() {
-
-    }
-
-    // This is the logic behind how the Scrape class takes in the template, finds info on the page, and returns it.
-    // async scrapeRecord(record_row, template) {
-
-    //     const record = new Record()
-
-    //     // This checks whether or not the info to be scraped is a single entry or a table to be scraped, as specified by the scrape template file.
-    //     for (const field of Object.entries(template)) {
-
-    //         if (field[1].type === "single_field") {
-
-    //             record.result[field[0]] = record_row.querySelector(field[1].selector).innerText
-    //             console.log(record.result[field[0]])
-    //             record.result[field[0]] = record.result[field[0]].replace(field[1].replace, "")
-    //             record.result.scrapedAt = new Date().toLocaleString()
-
-    //         }
-
-    //         else if (field[1].type === "table") {
-
-    //             const rows = record_row.querySelectorAll(`${field[1].table_selector}`)
-
-    //             rows.forEach(row => {
-    //                 let subfield = {}
-    //                 for (const row_field of Object.entries(field[1].row_object_template)) {
-    //                     subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
-    //                 }
-    //                 record.result[field[0]].push(subfield)
-    //             })
-
-    //         }
-
-    //     }
-    //     console.log(record)
-    //     return record
-    // }
 
 };
 

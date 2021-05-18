@@ -1,9 +1,12 @@
 {
     "template_name": "doctor",
+    "pages": 1,
+    "next_page_button": "",
+    "unit": "page",
     "settings": {
         "speed": 3,
         "maximum_tries": 5,
-        "saveAs": "data.json",
+        "save_as": "data.json",
         "puppeteerOptions": {
             "headless": false,
             "slowMo": 0,
@@ -28,7 +31,7 @@
         },
         "specialties": {
             "type": "table",
-            "table_selector": "#specialties > table:nth-child(2) > tbody",
+            "table_selector": "#specialties > table:nth-child(2) > tbody > tr",
             "row_object_template": {
                 "specialty": "td:nth-child(1)",
                 "issued_on": "td:nth-child(2)",
