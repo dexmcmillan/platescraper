@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "scrape": "node index.js",
-    "new": "node newtemplate.js"
+    "scrape": "node index.js"
   },
   "publishConfig": {
     "access": "public"
@@ -19,7 +18,8 @@
     "puppeteer": "^9.1.1"
   },
   "bin": {
-    "plate scrape": "./index.js"
+    "plate scrape": "./index.js",
+    "plate new": "./newtemplate.js"
   },
   "keywords": [
     "cli",

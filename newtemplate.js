@@ -1,14 +1,19 @@
+#!/usr/bin/env node
+
 const argv = require('minimist')(process.argv.slice(2));
 const fs = require('fs')
 
 const blanktemplate = {
-    "template_name": argv.name,
-    "next_page_button": "span.pull-right:nth-child(2) > ul:nth-child(1) > li:nth-child(6) > a:nth-child(1)",
-    "unit": "page",
+    "pagination": {
+        "pages": 1,
+        "records_per_page": 50,
+        "next_page_button": ""
+    },
+    "click_through": "",
+    "unit": "body",
     "settings": {
         "speed": 3,
         "maximum_tries": 5,
-        "saveAs": "data.json",
         "puppeteerOptions": {
             "headless": false,
             "slowMo": 0,
@@ -16,40 +21,47 @@ const blanktemplate = {
         }
     },
     "template": {
-        "FIELD1": {
+        "field1": {
             "type": "single_field",
-            "selector": "",
-            "replace": ""
+            "selector": ".centerAdmin > h2:nth-child(3)",
+            "regex_match": "(?<= / ).*(?=,)"
         },
-        "FIELD2": {
+        "field2": {
             "type": "single_field",
-            "selector": "",
-            "replace": ""
+            "selector": ""
         },
-        "FIELD3": {
-            "type": "single_field",
-            "selector": "",
-            "replace": ""
-        },
-        "FIELD4": {
+        "field3": {
             "type": "table",
-            "table_selector": "",
+            "row_selector": "",
             "row_object_template": {
-                "SUBFIELD": "",
-                "SUBFIELD": "",
-                "SUBFIELD": ""
+                "subfield1": "",
+                "subfield2": "",
+                "subfield3": {
+                    "selector": "td:nth-child(1)",
+                    "regex_match": ".*(?=\n)",
+                    "replace": "\n"
+                },
             }
+        },
+        "name_irrelevant": {
+            "type": "form",
+            "selector": ""
         }
     },
     "urls": [
-        
+        ""
     ]
-    
 }
 
-if (argv.name !== undefined) {
-    fs.writeFileSync(`./templates/${argv.name}.json`, JSON.stringify(blanktemplate))
+try {
+    if (argv.name !== undefined) {
+        fs.writeFileSync(`./templates/${argv.name}.json`, JSON.stringify(blanktemplate))
+    }
+    else {
+        console.error("ERROR: No name given. Please specify a name for your template using --name FILENAME.") 
+    }
 }
-else {
-    console.error("ERROR: No name given. Please specify a name for your template using --name FILENAME.") 
+catch {
+    console.log("wrong command bud!")
 }
+

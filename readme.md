@@ -19,45 +19,59 @@ Each template contains everything needed to run one of a few types of common scr
 TEMPLATENAME should be replaced with the name of your template (ie. carsforsale).
 
 Templates files contain a few common, required components:
-* *template_name*: The template name should be the same as your file name and is what's used to identify the template for use in a scrape.
-* *pages*: Often, scraping data requires code to click through pagination. Specifies the number of pages that you want to go through.
-* *next_page_button*: The CSS selector corresponding to the button that will be clicked in between scrapes of each page. Only required if pages > 1.
-* *unit*: Unit is a CSS selector corresponding to the element in the DOM that holds each separate record you want to scrape. In the case of data where a single page is a record, "body" should be specified here.
-* *settings*: The settings object specifies a number of options for the scrape.
-    * *speed*: This app makes asynchronous calls to the urls listed in each template. To ensure you don't cause problems, the async requests are made in groups, where speed is the number of URLs in each group. This number should be kept somewhere between 1-10 so as to keep demands on memory and outside servers low.
-    * *maximum_tries*: The number of times the scraper will try to scrape each page. If it errors out more times than this number, it will skip that page and will not record it.
-    * *save_as*: The name of the output file. Should always be appended with .json.
-    * *puppeteer_options*: 
-        * *headless*: Boolean that tells Puppeteer to run in either headless (no GUI) or headful mode. Headful mode is useful for debugging.
-        * *slowMo*: Slow your code down a bit if you're running intense scraping operations. Specify number in milliseconds.
-        * *defaultViewport*: Set the size of the viewport when running Puppeteer in headful mode.
-    * *template*: Here's where the magic happens. Each property in this object will become a property in the result JSON. Each property contains a few fields:
-        * *type*: Either single_field, table or form. Table will iterate through a table in your unit while single_field will grab the text of a one DOM object. Form will look through the first two columns of a table, grabbing the first column as the key and the second column as the value. Useful for grabbing an entire table of results where there may not be clearly marked table rows.
 
+        ```json
 
-        ```javascript
-
-        // single_field object
-        "name": {
-            "type": "single_field",
-            "selector": "strong span:nth-child(2)"
-        }
-
-        // table object
-        "specialties": {
-            "type": "table",
-            "table_selector": "#specialties > table:nth-child(2) > tbody > tr",
-            "row_object_template": {
-                "specialty": "td:nth-child(1)",
-                "issued_on": "td:nth-child(2)",
-                "type": "td:nth-child(3)"
-            }
-        }
-
-        // form object. The name of this property is irrelevant.
-        "all": {
-            "type": "form",
-            "selector": ".table"
+        {
+            "pagination": {                         // This object stores information about pagination for field collection.
+                "pages": 1,                         // Specify the number of pages to be scraped. You can also provide a CSS selector that will grab a number from that selector.
+                "records_per_page": 50,             // Currently irrelevant.
+                "next_page_button": ""              // Only used if pages > 1. Used to identify the button that advances the page.
+            },
+            "click_through": "",                    // The selector that will be clicked to retrieve the information in the template below. If empty, it will collect from the url.
+            "unit": "body",                         // If "body", it is assumed one record per one url. If a selector is given, it will search each selector matching that criteria for the full template given below.
+            "settings": {
+                "speed": 3,                         // For single page searches through many URLs, this limits the number of async calls made at a time.
+                "maximum_tries": 5,                 // The maximum number of times the scrape will restart if it errors out.
+                "puppeteerOptions": {
+                    "headless": false,              // Run puppeteer in headless more or not.
+                    "slowMo": 0,                    // Slows script execution down by this many milliseconds. Useful for debugging.
+                    "defaultViewport": null         // Standard viewport size in headful mode.
+                }
+            },
+            "template": {                           // This template, with the exception of "form" type elements, will define exactly how the output JSON will look.
+                "field1": {                         // Replace field1 with what you want this property to be named.
+                    "type": "single_field",         // REQUIRED: Type can be "single_field", "table", or "form". Each is described here. Single fields are simple infomation taken from one selector.
+                    "selector": "",                 // REQUIRED: The selector that holds this data.
+                    "regex_match": ".*(?=,)",       // OPTIONAL: Specify regex that will be used to call .match(). Useful for isolating particular bits of text in the same selector for different fields.
+                    "grab": "text"                  // OPTIONAL: Grab can be "text", "href", or "value". Determines what is taken from the element. Default is text. Value useful for scraping input boxes.
+                },
+                "field2": {
+                    "type": "single_field",
+                    "selector": "",
+                    "replace": "",                  // OPTIONAL: A string that will be passed through .replace() for this field. Useful for cleaning the data.
+                },
+                "field3": {
+                    "type": "table",                // REQUIRED: Table types require some extra information. The table will return an array with each row in the table as subfield objects.
+                    "row_selector": "",             // REQUIRED: The selector that corresponds to each row in the table. Should be relative to "unit".
+                    "row_object_template": {        // REQUIRED: Defines how each subfield will look.
+                        "subfield1": "",            // REQUIRED: Each subfield acts like a field template object.
+                        "subfield2": "",            // You can specify a selector only...
+                        "subfield3": {
+                            "selector": "",         // REQUIRED (if passing object): ...or pass an object with selector, regex_match, and replace properties. Each functions like the same field property.
+                            "regex_match": "",      // OPTIONAL
+                            "replace": "\n"         // OPTIONAL
+                        },
+                    }
+                },
+                "name_irrelevant": {                // Form types will not return the name of the field, so it is irrelevant what this field is named.
+                    "type": "form",                 // This type will go through two column tables, with the first cell containing the field name, and the second the value. It will add each to the record as though it were
+                    "selector": ""                  // collected using a single_field type.
+                }
+            },
+            "urls": [                               // The urls to be iterated through for the scrape. In scrapes with pagination, this will be one url. In scrapes where there is one record returned per page, there will be
+                ""                                  // several.
+            ]
         }
         ```
 

@@ -58,9 +58,4 @@ const bc = async function() {
     bc.run().catch()
 }
 
-try {
-    eval(argv._[1]+"()")
-}
-catch {
-    Scrape.error(2)
-}
+eval(argv._[1]+"()")
