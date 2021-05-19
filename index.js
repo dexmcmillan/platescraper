@@ -43,4 +43,4 @@ const doctor = async function() {
         .catch()
 }
 
-pei()
+sask()

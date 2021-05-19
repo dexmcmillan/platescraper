@@ -2,7 +2,7 @@
     "template_name": "doctor",
     "pages": 1,
     "next_page_button": "",
-    "unit": "page",
+    "unit": "body",
     "settings": {
         "speed": 3,
         "maximum_tries": 5,

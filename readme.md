@@ -22,7 +22,7 @@ Templates files contain a few common, required components:
 * *template_name*: The template name should be the same as your file name and is what's used to identify the template for use in a scrape.
 * *pages*: Often, scraping data requires code to click through pagination. Specifies the number of pages that you want to go through.
 * *next_page_button*: The CSS selector corresponding to the button that will be clicked in between scrapes of each page. Only required if pages > 1.
-* *unit*: Unit is a CSS selector corresponding to the element in the DOM that holds each separate record you want to scrape. In the case of data where a single page is a record, an empty string or "page" should be specified here.
+* *unit*: Unit is a CSS selector corresponding to the element in the DOM that holds each separate record you want to scrape. In the case of data where a single page is a record, "body" should be specified here.
 * *settings*: The settings object specifies a number of options for the scrape.
     * *speed*: This app makes asynchronous calls to the urls listed in each template. To ensure you don't cause problems, the async requests are made in groups, where speed is the number of URLs in each group. This number should be kept somewhere between 1-10 so as to keep demands on memory and outside servers low.
     * *maximum_tries*: The number of times the scraper will try to scrape each page. If it errors out more times than this number, it will skip that page and will not record it.

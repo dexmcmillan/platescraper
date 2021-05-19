@@ -46,6 +46,7 @@ class Scrape {
         this.pages = template.pages
         this.next_page_button = template.next_page_button
         this.unit = template.unit
+        this.click_through = template.click_through
 
         this.save_as = template.settings.save_as
         this.save_stream = fs.createWriteStream(`./output/${this.save_as}`)
@@ -81,7 +82,7 @@ class Scrape {
 
                             const page = await browser.newPage();
                             await page.exposeFunction('getRecord', this.getRecord);
-                            // page.on('console', consoleObj => console.log(consoleObj.text()));
+                            page.on('console', consoleObj => console.log(consoleObj.text()));
 
                             try {
                                 await Promise.all([
@@ -129,7 +130,20 @@ class Scrape {
         })
     }
 
-    async urls(url, selector) {
+    async urls(url, selector, nextPageButton = this.next_page_button) {
+
+        var urls = await this.getUrls(url, selector)
+        await Promise.all([
+            page.click(nextPageButton),
+            page.waitForNavigation({ waitUntil: "networkidle0", timeout: 5000 })
+        ])
+
+        urls.map(el => this.urlList.push(el))
+        return this.urlList
+
+    }
+
+    async getUrls(url, selector) {
 
         console.log("Grabbing urls...")
 
@@ -159,101 +173,117 @@ class Scrape {
 
         }, selector)
 
-        await urls.map(el => this.urlList.push(el))
         browser.close()
-        return this.urlList
+        return urls
+
     }
 
-    async getRecord(page, element = null) {
+    async getRecord(page, item = page) {
 
-        const pageResults = await page.evaluate(async (template, element) => {
-            let record = {}
-            // This checks whether or not the info to be scraped is a single entry, a table, or a form-style table to be scraped, as specified by the scrape template file.
-            for (const field of Object.entries(template)) {
+        let record = {}
 
-                if (element === null) {
-                    var rows = document.querySelectorAll(`${field[1].table_selector}`)
-                }
-                else {
-                    var rows = element.querySelectorAll(`${field[1].table_selector}`)
-                }
+        console.log("getRecord started.")
+        // This checks whether or not the info to be scraped is a single entry, a table, or a form-style table to be scraped, as specified by the scrape template file.
+        for (const field of Object.entries(this.template)) {
 
-                if (field[1].type === "single_field") {
 
-                    if (element === null) {
-                        record[field[0]] = document.querySelector(field[1].selector).innerText
+
+
+            if (field[1].type === "single_field") {
+                record[field[0]] = await item.$eval(`${field[1].selector}`, el => el.innerText)
+                
+                record[field[0]] = record[field[0]].replace(field[1].replace, "")
+                console.log(record[field[0]])
+            }
+
+
+
+            else if (field[1].type === "table") {
+
+                let rows = await page.$$(`${field[1].table_selector}`)
+
+                record[field[0]] = []
+
+                for (const row of rows) {
+
+                    let subfield = {}
+                    for (const row_field of Object.entries(field[1].row_object_template)) {
+                        subfield[row_field[0]] = await row.$eval(row_field[1], el => el.innerText)
                     }
-                    else {
-                        record[field[0]] = element.querySelector(field[1].selector).innerText
-                    }
+                    record[field[0]].push(subfield)
 
-                    record[field[0]] = record[field[0]].replace(field[1].replace, "")
                 }
+            }
+            else if (field[1].type === "form") {
 
-                else if (field[1].type === "table") {
+                const rows = await item.$$(`${field[1].selector} tr`)
 
-                    record[field[0]] = []
+                for (const row of rows) {
 
+                    const key = await row.$eval("td:nth-child(1)", el => el.innerText).toLowerCase().replace(/\s/, "_")
 
+                    record[key] = await row.$eval("td:nth-child(2)", el => el.innerText).replace(/\n/, " ")
 
-                    rows.forEach(row => {
-
-                        let subfield = {}
-                        for (const row_field of Object.entries(field[1].row_object_template)) {
-                            subfield[row_field[0]] = row.querySelector(row_field[1]).innerText
-                        }
-                        record[field[0]].push(subfield)
-
-                    })
-                }
-                else if (field[1].type === "form") {
-
-                    rows = document.querySelectorAll(`${field[1].selector} tr`)
-
-                    rows.forEach(row => {
-
-                        const key = row.querySelector("td:nth-child(1)").innerText.toLowerCase().replace(/\s/, "_")
-
-                        record[key] = row.querySelector("td:nth-child(2)").innerText.replace(/\n/, " ")
-
-
-                    })
 
                 }
 
             }
-            return record
-        }, this.template, element)
-        return pageResults
+
+
+
+
+
+        }
+        console.log(record)
+        return record
     }
 
     async scrapePage(page) {
 
         page.on('console', consoleObj => console.log(consoleObj.text()));
 
-
         let pageResults = []
 
-        if (this.unit === "page" || this.unit === "" || this.unit === null) {
+        await page.$$eval(`${this.unit} ${this.click_through}`, el => el.map(x => {
+            x.setAttribute("formtarget", "_blank")
+        }));
 
-            const record = await this.getRecord(page)
+        let rows = await page.$$(`${this.unit} ${this.click_through}`)
+        
+        console.log(rows.length)
+        if (this.click_through !== undefined) {
 
-            record.scrapedAt = new Date().toLocaleString()
-            pageResults.push(record)
+            for (let i = 1; i <= rows.length; i++) {
 
-        }
-        else {
 
-            const rows = await page.$$(this.unit)
+                await Promise.all([
+                    page.click(`${this.unit}:nth-of-type(${i}) ${this.click_through}`),
+                    page.waitForNavigation({ waitUntil: "networkidle0" })
+                ])
+
+                var record = await this.getRecord(page)
+
+                await Promise.all([
+                    page.goBack(),
+                    page.waitForNavigation({ waitUntil: "networkidle0" })
+                ])
+
+                rows = await page.$$(`${this.unit} ${this.click_through}`)
+                
+            }
+
+        } else {
+
+            rows = await page.$$(`${this.unit} ${this.click_through}`)
 
             for (const item of rows) {
-                const record = await this.getRecord(page, item)
-                record.scrapedAt = new Date().toLocaleString()
-                pageResults.push(record)
-
+                var record = await this.getRecord(page, item)
             }
+
         }
 
+        record.scrapedAt = new Date().toLocaleString()
+        pageResults.push(record)
         return pageResults
     }
 

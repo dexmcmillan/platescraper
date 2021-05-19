@@ -1,6 +1,7 @@
 {
     "template_name": "sask-lobbying",
     "pages": 5,
+    "click_through": "button",
     "next_page_button": "#searchResultsTable_next > a:nth-child(1)",
     "unit": "#searchResultsTable > tbody > tr",
     "settings": {
@@ -9,41 +10,15 @@
         "save_as": "sask-lobbying.json",
         "puppeteerOptions": {
             "headless": false,
-            "slowMo": 0,
+            "slowMo": 100,
             "defaultViewport": null
         }
     },
     "template": {
-        "client": {
+        "registration_number": {
             "type": "single_field",
-            "selector": "td:nth-child(1)"
-        },
-        "lobbyist": {
-            "type": "single_field",
-            "selector": "td:nth-child(2)"
-        },
-        "status": {
-            "type": "single_field",
-            "selector": "td:nth-child(3)"
-        },
-        "type": {
-            "type": "single_field",
-            "selector": "td:nth-child(4)"
-        },
-        "version": {
-            "type": "single_field",
-            "selector": "td:nth-child(5)"
-        },
-        "date_registered": {
-            "type": "single_field",
-            "selector": "td:nth-child(6)"
-        },
-        "business_activities": {
-            "type": "single_field",
-            "click_through": "tr.odd:nth-child(1) > td:nth-child(7) > button:nth-child(1)",
-            "selector": "td:nth-child(6)"
+            "selector": "div.col-md-4:nth-child(1) > p:nth-child(2)"
         }
-        
     },
     "urls": [
         "https://www.sasklobbyistregistry.ca/search-the-registry/"
