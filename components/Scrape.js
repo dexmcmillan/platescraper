@@ -57,8 +57,8 @@ class Scrape {
 
         this.click_through = template.click_through
 
-        this.save_as = `./output/${templateName}.json`
-        this.save_stream = fs.createWriteStream(`./output/${templateName}`)
+        this.save_as = `./output/${templateName.replace("template", "data")}.json`
+        this.save_stream = fs.createWriteStream(`${this.save_as}`)
 
         console.log(`New scrape started!\nBased on template: ${this.template_name}.`)
 
@@ -208,22 +208,40 @@ class Scrape {
         // This checks whether or not the info to be scraped is a single entry, a table, or a form-style table to be scraped, as specified by the scrape template file.
         for (const field of Object.entries(this.template)) {
 
-            var regexp = new RegExp(field[1].regex_match, 'i');
+            if (field[1].type === "single_field" || typeof field[1] === "string") {
+                console.log("Single field")
+                let selector = field[1]
+                let to_replace = undefined
+                let grab = undefined
 
+                if (field[1].regex_match !== undefined) {
+                    var regexp = new RegExp(field[1].regex_match, 'i');
+                }
+                else {
+                    regexp = /.*/i
+                }
 
-            if (field[1].type === "single_field") {
+                if (typeof field[1] === "object") {
+                    selector = field[1].selector
+                    to_replace = field[1].replace
+                    grab = field[1].grab
+                }
+
                 try {
-                    if (field[1].grab === "text" || field[1].grab === undefined) {
-                        record[field[0]] = await item.$eval(`${field[1].selector}`, el => el.innerText)
-                    } else if (field[1].grab === "value") {
-                        record[field[0]] = await item.$eval(`${field[1].selector}`, el => el.value)
-                    } else if (field[1].grab === "href") {
-                        record[field[0]] = await item.$eval(`${field[1].selector}`, el => el.href)
+                    if (grab === "text" || grab === undefined) {
+                        record[field[0]] = await item.$eval(`${selector}`, el => el.innerText)
+                        record[field[0]] = record[field[0]].match(regexp)[0].replace(field[1].replace, "")
+                    } else if (grab === "value") {
+                        record[field[0]] = await item.$eval(`${selector}`, el => el.value)
+                        record[field[0]] = record[field[0]].match(regexp)[0].replace(field[1].replace, "")
+                    } else if (grab === "href") {
+                        record[field[0]] = await item.$eval(`${selector}`, el => el.href)
                     }
                     
-                    record[field[0]] = record[field[0]].match(regexp)[0].replace(field[1].replace, "")
                     
-                } catch {}
+                } catch(err) {
+                    console.log(err)
+                }
                 
             }
 
@@ -252,14 +270,12 @@ class Scrape {
                             }
                             
                             if (typeof row_field[1] === "object") {
-                                console.log("Object")
                                 row_selector = row_field[1].selector
                                 to_replace = row_field[1].replace
                                 grab = row_field[1].grab
                                 
                             }
 
-                            console.log(row_regexp)
     
                             
                             if (grab === "text" || grab === undefined) {

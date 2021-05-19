@@ -11,14 +11,29 @@
         "maximum_tries": 5,
         "puppeteerOptions": {
             "headless": false,
-            "slowMo": 100,
+            "slowMo": 0,
             "defaultViewport": null
         }
     },
     "template": {
-        "registration_number": {
-            "type": "single_field",
-            "selector": "div.col-md-4:nth-child(1) > p:nth-child(2)"
+        "registration_number": "div.col-md-4:nth-child(1) > p:nth-child(2)",
+        "date_added": "div.col-md-4:nth-child(4) > p:nth-child(2)",
+        "govt_funding": "div.panel:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(6) > ul:nth-child(2)",
+        "lobbyists": {
+            "type": "table",
+            "row_selector": "#lobbyists > tbody:nth-child(2) > tr",
+            "row_object_template": {
+                "name": "td:nth-child(1)"
+            }
+        },
+        "subject_matter": {
+            "type": "table",
+            "row_selector": "div.panel:nth-child(4) > div:nth-child(2) > div:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:not(:first-child)",
+            "row_object_template": {
+                "description": "td:nth-child(1)",
+                "subject_matter": "td:nth-child(2)",
+                "categories": "td:nth-child(3)"
+            }
         }
     },
     "urls": [
