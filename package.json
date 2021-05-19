@@ -7,6 +7,9 @@
     "scrape": "node index.js",
     "new": "node newtemplate.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -14,5 +17,12 @@
     "lodash": "^4.17.21",
     "minimist": "^1.2.5",
     "puppeteer": "^9.1.1"
-  }
+  },
+  "bin": {
+    "plate scrape": "./index.js"
+  },
+  "keywords": [
+    "cli",
+    "plate"
+  ]
 }

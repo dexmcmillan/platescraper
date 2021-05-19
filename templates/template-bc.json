@@ -1,0 +1,69 @@
+{
+    "pagination": {
+        "pages": 19,
+        "records_per_page": 50,
+        "next_page_button": "#searchResultsTable_next > a:nth-child(1)"
+    },
+    "click_through": "a",
+    "unit": "ol.list-unstyled > li",
+    "settings": {
+        "speed": 3,
+        "maximum_tries": 5,
+        "puppeteerOptions": {
+            "headless": false,
+            "slowMo": 0,
+            "defaultViewport": null
+        }
+    },
+    "template": {
+        "name": {
+            "type": "single_field",
+            "selector": ".centerAdmin > h2:nth-child(3)",
+            "regex_match": "(?<= / ).*(?=,)"
+        },
+        "meeting_mlas": {
+            "type": "single_field",
+            "selector": "div.col-sm-12:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > table:nth-child(1) > tbody:nth-child(4) > tr:nth-child(1) > td:nth-child(2)"
+        },
+        "communications": {
+            "type": "table",
+            "row_selector": "table.table-condensed:nth-child(1) > tbody:nth-child(2) tr",
+            "row_object_template": {
+                "topics": "td:nth-child(1)",
+                "outcomes": "td:nth-child(2)",
+                "subject_matter": "td:nth-child(3)"
+            }
+        },
+        "funding": {
+            "type": "table",
+            "row_selector": "table.table:nth-child(3) > tbody:nth-child(3) tr",
+            "row_object_template": {
+                "name": "td:nth-child(1)",
+                "description": "td:nth-child(2)",
+                "circumstance": "td:nth-child(3)",
+                "date_promised": "td:nth-child(4)",
+                "value_promised": "td:nth-child(5)",
+                "date_given": "td:nth-child(6)",
+                "value_given": "td:nth-child(7)"
+            }
+        },
+        "who_lobbied": {
+            "type": "single_field",
+            "selector": ".col-sm-4 > div:nth-child(1) > div:nth-child(2)"
+        },
+        "lobbyists": {
+            "type": "table",
+            "row_selector": ".col-sm-8 > div:nth-child(1) > div:nth-child(2) > table:nth-child(1) > tbody:nth-child(3)",
+            "row_object_template": {
+                "name": {
+                    "selector": "td:nth-child(1)",
+                    "regex_match": ".*(?=\n)"
+                },
+                "contributions": "td:nth-child(2)"
+            }
+        }
+    },
+    "urls": [
+        "https://www.lobbyistsregistrar.bc.ca/app/secure/orl/lrs/do/clntSmmrySrch?V_SEARCH.command=refineCategory&V_TOKEN=1234567890&V_SEARCH.scopeCategory=solr.facetName.activityStatus%3D6"
+    ]
+}

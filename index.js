@@ -1,7 +1,11 @@
+#!/usr/bin/env node
+
+const argv = require('minimist')(process.argv.slice(2));
+
 const { Scrape } = require('./components/Scrape.js')
 
-function pei() {
-    const lobbyScrape = new Scrape("lobbying")
+function pe() {
+    const lobbyScrape = new Scrape("template-pe")
 
     const url = "https://www.princeedwardisland.ca/en/feature/lobbyist-registry#/service/Lobbyist/Lobbyist;lobbyist_name=null;company=null;client=null;target=null;lobbyist_type=null;status=1;wdf_url_query=true;sid=null;page_num=1;page_count=1;finished=0"
     const selector = ".table > tbody:nth-child(2) > tr > td:nth-child(1) > a:nth-child(1)"
@@ -11,36 +15,52 @@ function pei() {
             console.log("Done scraping urls!")
             return lobbyScrape.run(res)
         })
-        .then(res => {
-            const timeFinished = new Date()
-            console.log(`Scrape done! Finished at ${timeFinished.toLocaleString()}`)
-            lobbyScrape.save_stream.write(res)
-        })
         .catch()
 }
 
-function sask() {
-    const lobbyScrape = new Scrape("sask-lobbying")
+function sk() {
+    const saskatchewan = new Scrape("template-sk")
 
-    lobbyScrape.run()
-        .then(res => {
-            const timeFinished = new Date()
-            console.log(`Scrape done! Finished at ${timeFinished.toLocaleString()}`)
-            lobbyScrape.save_stream.write(res)
-        })
-        .catch()
+    saskatchewan.run().catch()
 }
 
-const doctor = async function() {
-    const doctorScrape = await new Scrape("doctor")
+const nb = async function() {
+    const newbrunswick = await new Scrape("template-nb")
 
-    doctorScrape.run()
-        .then(res => {
-            const timeFinished = new Date()
-            console.log(`Scrape done! Finished at ${timeFinished.toLocaleString()}`)
-            doctorScrape.save_stream.write(res)
-        })
-        .catch()
+    const url = "https://www.pxw1.snb.ca/snb9000/product.aspx?productid=A001PLOBBYSearch&l=e"
+    const selector = "#ContentDeliveryDiv > table:nth-child(4) > tbody:nth-child(1) > tr:not(:first-child) > td:nth-child(6) > a:nth-child(1)"
+
+    const customFunction = async function(page) {
+        await Promise.all([
+            page.click('#_ctl4_btnSubmit'),
+            page.waitForNavigation()
+        ])
+    }
+
+    newbrunswick.customUrlCode = customFunction
+
+    newbrunswick.urls(url, selector)
+    .then(res => {
+        console.log("Done scraping urls!")
+        return newbrunswick.run(res)
+    }).catch()
 }
 
-sask()
+const ab = async function() {
+    const alberta = await new Scrape("template-ab")
+
+    alberta.run().catch()
+}
+
+const bc = async function() {
+    const bc = await new Scrape("template-bc")
+
+    bc.run().catch()
+}
+
+try {
+    eval(argv._[1]+"()")
+}
+catch {
+    Scrape.error(2)
+}
