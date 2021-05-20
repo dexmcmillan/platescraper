@@ -1,12 +1,14 @@
 const p = require('puppeteer')
 const _ = require('lodash')
 const fs = require('fs')
+const { reject } = require('lodash')
 
 class Scrape {
 
     results = []
 
     // Urls will be loaded into here on object construction.
+    urlParams = []
     urlList = []
 
     // Defines how information is collected off the page, and how it's structured.
@@ -32,6 +34,9 @@ class Scrape {
     save_stream;
     records_selector;
     pages_to_scrape;
+    start_time;
+    end_time;
+    duration;
 
     constructor(templateName) {
 
@@ -43,7 +48,17 @@ class Scrape {
         this.template = template.template
         this.maximum_tries = template.settings.maximum_tries
         this.speed = template.settings.speed
-        this.urlList = template.urls
+
+        if (template.urls.start !== undefined) {
+            this.urlParams = template.urls
+        } else if (typeof template.urls === "string") {
+            this.urlList = [template.urls]
+        }
+        else {
+            console.log("No problems here.")
+            this.urlList = template.urls
+        }
+
         this.puppeteerOptions = template.settings.puppeteerOptions
         this.pages = template.pages
         this.next_page_button = template.pagination.next_page_button
@@ -60,15 +75,25 @@ class Scrape {
         this.save_as = `./output/${templateName.replace("template", "data")}.json`
         this.save_stream = fs.createWriteStream(`${this.save_as}`)
 
-        console.log(`New scrape started!\nBased on template: ${this.template_name}.`)
+        this.start_time = new Date().toLocaleString()
+        console.log(`New scrape started at ${this.start_time}\nBased on template: ${this.template_name}.`)
+        
 
         return this
     }
 
     // This method is one of the primary methods for scraping pages.
     // It takes an array of urls and goes through each of them asynchronously (with limits) to grab information.
-    async run(getUrlsFrom, urls = this.urlList) {
+    async run(urls = this.urlList) {
+        
         return new Promise(async (resolve) => {
+
+            if (this.urlList === undefined) {
+                console.log("Urls getter firing.")
+                await this.urls(this.urlParams.start, this.urlParams.selector)
+            }
+
+            console.log(this.urlList)
 
             // Chunks urls for async scraping.
             const urlChunks = await _.chunk(urls, this.speed)
@@ -86,20 +111,22 @@ class Scrape {
                 chunk.forEach(url => {
 
                     // ...create a new promise to grab the required info from the scrape template...
-                    const promise = new Promise(async (resolve) => {
-                        while (timesFailed <= this.maximum_tries) {
+                    const promise = new Promise(async (resolve, reject) => {
+                        while (timesFailed < this.maximum_tries) {
+
+                            
 
                             const page = await browser.newPage();
                             await page.exposeFunction('getRecord', this.getRecord);
-                            page.on('console', consoleObj => console.log(consoleObj.text()));
+
+                            await Promise.all([
+                                page.goto(url),
+                                page.waitForNavigation({ waitUntil: "networkidle0" })
+                            ])
+
+                            await this.customCode(page)
 
                             try {
-                                await Promise.all([
-                                    page.goto(url),
-                                    page.waitForNavigation({ waitUntil: "networkidle0" })
-                                ])
-
-                                await this.customCode(page)
 
                                 if (typeof this.pages === "string") {
                                     this.pages = await page.$eval(this.pages, el => el.innerText)
@@ -129,11 +156,14 @@ class Scrape {
                                 return resolve(JSON.stringify(this.results))
                             } catch (err) {
                                 console.log(err)
+                                await page.close()
                                 timesFailed++
+                                console.log(`Times failed: ${timesFailed}.`)
+                                reject("ERROR: Scrape failed too many times.")
                             }
 
                         }
-                    })
+                    }).catch(error => console.log(error))
 
                     promises.push(promise)
 
@@ -144,34 +174,38 @@ class Scrape {
             }
             browser.close()
 
-            const timeFinished = new Date()
-            console.log(`Scrape done! Finished at ${timeFinished.toLocaleString()}`)
-
             const stringifiedResults = JSON.stringify(this.results)
             this.save_stream.write(stringifiedResults)
 
+            this.end_time = new Date()
+            this.duration = Math.round(((this.end_time - this.start_time)/1000),1)
+
+            
             return resolve(this.results)
         })
     }
 
-    async urls(url, selector) {
-
+    async urls(url, selector=this.urlParams.selector) {
+        
         var urls = await this.getUrls(url, selector)
-
+        
         urls.map(el => this.urlList.push(el))
+        console.log(this.urlList)
         return this.urlList
 
     }
 
     async getUrls(url, selector) {
 
+        let allUrls = []
+
         console.log("Grabbing urls...")
 
         // New puppeteer browser instance.
         const browser = await p.launch(this.puppeteerOptions);
-
         const page = await browser.newPage();
-        page.on('console', consoleObj => console.log(consoleObj.text()));
+
+        page.on('console', consoleObj => console.log(`CONSOLE MESSAGE: ${consoleObj.text()}`));
 
         await Promise.all([
             page.goto(url),
@@ -180,23 +214,35 @@ class Scrape {
 
         await this.customUrlCode(page)
 
-        const urls = await page.evaluate((selector) => {
+        for (let pageNum = 1; pageNum <= this.urlParams.pages; pageNum++) {
 
-            const urlsArray = []
+            if (this.urlParams.pages > 1) {
+                await Promise.all([
+                    page.click(this.urlParams.next_page_button),
+                    page.waitForNavigation({ waitUntil: "networkidle0" ,timeout: 5000})
+                ])
+            }
+            
 
-            const rows = document.querySelectorAll(selector)
-
-            rows.forEach(row => {
-                const link = row.href
-                urlsArray.push(link)
+            const urls = await page.$$eval(selector, array => {
+                console.log(array.length)
+                return array.map(row => row.href)
             })
 
-            return urlsArray
+            console.log(urls.length)
 
-        }, selector)
+            await urls.forEach(item => allUrls.push(item))
+
+            if (this.urlParams.pages > 1) {
+                await Promise.all([
+                    page.goBack(),
+                    page.waitForNavigation({ waitUntil: "networkidle0" ,timeout: 5000})
+                ])
+            }
+        }
 
         browser.close()
-        return urls
+        return allUrls
 
     }
 
@@ -204,18 +250,17 @@ class Scrape {
 
         let record = {}
 
-        console.log("getRecord started.")
         // This checks whether or not the info to be scraped is a single entry, a table, or a form-style table to be scraped, as specified by the scrape template file.
         for (const field of Object.entries(this.template)) {
 
-            if (field[1].type === "single_field" || typeof field[1] === "string") {
-                console.log("Single field")
+            if (field[1].type === "single_field" || field[1].type === undefined) {
                 let selector = field[1]
                 let to_replace = undefined
                 let grab = undefined
+                let regexp = undefined
 
                 if (field[1].regex_match !== undefined) {
-                    var regexp = new RegExp(field[1].regex_match, 'i');
+                    regexp = new RegExp(field[1].regex_match, 'i');
                 }
                 else {
                     regexp = /.*/i
@@ -227,38 +272,36 @@ class Scrape {
                     grab = field[1].grab
                 }
 
-                try {
-                    if (grab === "text" || grab === undefined) {
-                        record[field[0]] = await item.$eval(`${selector}`, el => el.innerText)
-                        record[field[0]] = record[field[0]].match(regexp)[0].replace(field[1].replace, "")
-                    } else if (grab === "value") {
-                        record[field[0]] = await item.$eval(`${selector}`, el => el.value)
-                        record[field[0]] = record[field[0]].match(regexp)[0].replace(field[1].replace, "")
-                    } else if (grab === "href") {
-                        record[field[0]] = await item.$eval(`${selector}`, el => el.href)
-                    }
-                    
-                    
-                } catch(err) {
-                    console.log(err)
+                if (grab === "text" || grab === undefined) {
+                    record[field[0]] = await item.$eval(`${selector}`, el => el.innerText)
+                        .then(res => res.match(regexp)[0].replace(to_replace, ""))
+                        .catch(err => console.log(err))
+                } else if (grab === "value") {
+                    record[field[0]] = await item.$eval(`${selector}`, el => el.value)
+                        .then(res => res.match(regexp)[0].replace(to_replace, ""))
+                        .catch(err => console.log(err))
+                } else if (grab === "href") {
+                    record[field[0]] = await item.$eval(`${selector}`, el => el.href)
                 }
-                
+                    
             }
 
 
 
             else if (field[1].type === "table") {
 
-                let rows = await page.$$(`${field[1].row_selector}`)
+                let rows = await page.$$(`${field[1].selector}`)
 
                 record[field[0]] = []
 
                 for (const row of rows) {
                     try {
-                        let subfield = {}
-                        for (const row_field of Object.entries(field[1].row_object_template)) {
+                        
+                        for (const row_field of Object.entries(field[1].template)) {
+
+                            let subfield = {}
     
-                            let row_selector = row_field[1]
+                            let selector = row_field[1]
                             let to_replace = undefined
                             let grab = undefined
                             
@@ -270,7 +313,7 @@ class Scrape {
                             }
                             
                             if (typeof row_field[1] === "object") {
-                                row_selector = row_field[1].selector
+                                selector = row_field[1].selector
                                 to_replace = row_field[1].replace
                                 grab = row_field[1].grab
                                 
@@ -279,16 +322,17 @@ class Scrape {
     
                             
                             if (grab === "text" || grab === undefined) {
-                                subfield[row_field[0]] = await row.$eval(row_selector, el => el.innerText)
+                                subfield[row_field[0]] = await row.$eval(selector, el => el.innerText)
                                 subfield[row_field[0]] = subfield[row_field[0]].match(row_regexp)[0].replace(to_replace, "")
                             } else if (grab === "value") {
-                                subfield[row_field[0]] = await row.$eval(row_selector, el => el.value)
+                                subfield[row_field[0]] = await row.$eval(selector, el => el.value)
                                 subfield[row_field[0]] = subfield[row_field[0]].match(row_regexp)[0].replace(to_replace, "")
                             } else if (grab === "href") {
-                                subfield[row_field[0]] = await row.$eval(row_selector, el => el.href)
+                                subfield[row_field[0]] = await row.$eval(selector, el => el.href)
                             }
+                            record[field[0]].push(subfield) 
                         }
-                        record[field[0]].push(subfield)  
+                         
                     } catch(err) {
                         console.log(err)
                         // Probably a table that exists but is empty.
@@ -309,7 +353,7 @@ class Scrape {
                         if (field[1].grab === "text" || field[1].grab === undefined) {
                             var key = await row.$eval("td:nth-of-type(1)", el => el.innerText)
                             key = key.toLowerCase().replace(spaceReplace, "_")
-                            record[key] = await row.$eval("td:nth-of-type(2) *", el => el.innerText)
+                            record[key] = await row.$eval("td:nth-of-type(2)", el => el.innerText)
                         } else if (field[1].grab === "value") {
                             var key = await row.$eval("td:nth-of-type(1)", el => el.innerText)
                             key = key.toLowerCase().replace(spaceReplace, "_")
@@ -320,8 +364,8 @@ class Scrape {
                             record[key] = await row.$eval("td:nth-of-type(2) *", el => el.href)
                         }
                         record[key] = record[key].replace(replace, " ")
-                    } catch {
-
+                    } catch(err) {
+                        console.log(err)
                     }
 
                     
@@ -340,8 +384,6 @@ class Scrape {
 
     async scrapePage(page) {
 
-        page.on('console', consoleObj => console.log(consoleObj.text()));
-
         let pageResults = []
 
         if (this.click_through !== undefined) {
@@ -355,12 +397,8 @@ class Scrape {
                         page.click(`${this.unit}:nth-child(${i}) ${this.click_through}`),
                         page.waitForNavigation({ waitUntil: "networkidle0" })
                     ])
-                    try {
-                        var record = await this.getRecord(page)
-                    } catch(err) {
-                        console.log("ERROR: Cannot collect record.")
-                        console.log(err)
-                    }
+                    var record = await this.getRecord(page)
+                        .catch(error => console.log(error))
                     
     
                     await Promise.all([

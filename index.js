@@ -7,14 +7,7 @@ const { Scrape } = require('./components/Scrape.js')
 function pe() {
     const lobbyScrape = new Scrape("template-pe")
 
-    const url = "https://www.princeedwardisland.ca/en/feature/lobbyist-registry#/service/Lobbyist/Lobbyist;lobbyist_name=null;company=null;client=null;target=null;lobbyist_type=null;status=1;wdf_url_query=true;sid=null;page_num=1;page_count=1;finished=0"
-    const selector = ".table > tbody:nth-child(2) > tr > td:nth-child(1) > a:nth-child(1)"
-
-    lobbyScrape.urls(url, selector)
-        .then(res => {
-            console.log("Done scraping urls!")
-            return lobbyScrape.run(res)
-        })
+    lobbyScrape.run()
         .catch()
 }
 
@@ -56,6 +49,52 @@ const bc = async function() {
     const bc = await new Scrape("template-bc")
 
     bc.run().catch()
+}
+
+const mb = async function() {
+
+    const mb = await new Scrape("template-mb")
+
+    const customFunction = async function(page) {
+
+        const searchButton = '#publicReportForm > div > table > tbody > tr:nth-child(11) > td > a'
+        const registrationRole = '#publicReportForm_form_registrationRole'
+        const registrationStatus = '#publicReportForm_form_registrationStatus'
+
+        await page.$eval(registrationRole, el => el.value = "all")
+        await page.$eval(registrationStatus, el => el.value = "active")
+
+        await Promise.all([
+            page.click(searchButton),
+            page.waitForNavigation({ waitUntil: 'networkidle0' })
+        ])
+
+    }
+
+    mb.customCode = customFunction
+    
+
+    mb.run().catch()
+}
+
+const nl = async function() {
+
+    const nl = await new Scrape("template-nl")
+
+    const customFunction = async function(page) {
+
+        await page.waitForNavigation()
+
+        await Promise.all([
+            page.click('#btnSearchAll'),
+            page.waitForSelector('#trSearchResultsRecords')
+        ])
+    }
+
+    nl.customUrlCode = customFunction
+    
+
+    nl.run().catch()
 }
 
 eval(argv._[1]+"()")

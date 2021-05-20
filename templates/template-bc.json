@@ -17,18 +17,14 @@
     },
     "template": {
         "name": {
-            "type": "single_field",
             "selector": ".centerAdmin > h2:nth-child(3)",
             "regex_match": "(?<= / ).*(?=,)"
         },
-        "meeting_mlas": {
-            "type": "single_field",
-            "selector": "div.col-sm-12:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > table:nth-child(1) > tbody:nth-child(4) > tr:nth-child(1) > td:nth-child(2)"
-        },
+        "meeting_mlas": "div.col-sm-12:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > div:nth-child(1) > table:nth-child(1) > tbody:nth-child(4) > tr:nth-child(1) > td:nth-child(2)",
         "communications": {
             "type": "table",
-            "row_selector": "table.table-condensed:nth-child(1) > tbody:nth-child(2) tr",
-            "row_object_template": {
+            "selector": "table.table-condensed:nth-child(1) > tbody:nth-child(2) tr",
+            "template": {
                 "topics": "td:nth-child(1)",
                 "outcomes": "td:nth-child(2)",
                 "subject_matter": "td:nth-child(3)"
@@ -36,8 +32,8 @@
         },
         "funding": {
             "type": "table",
-            "row_selector": "table.table:nth-child(3) > tbody:nth-child(3) tr",
-            "row_object_template": {
+            "selector": "table.table:nth-child(3) > tbody:nth-child(3) tr",
+            "template": {
                 "name": "td:nth-child(1)",
                 "description": "td:nth-child(2)",
                 "circumstance": "td:nth-child(3)",
@@ -47,14 +43,11 @@
                 "value_given": "td:nth-child(7)"
             }
         },
-        "who_lobbied": {
-            "type": "single_field",
-            "selector": ".col-sm-4 > div:nth-child(1) > div:nth-child(2)"
-        },
+        "who_lobbied": ".col-sm-4 > div:nth-child(1) > div:nth-child(2)",
         "lobbyists": {
             "type": "table",
-            "row_selector": ".col-sm-8 > div:nth-child(1) > div:nth-child(2) > table:nth-child(1) > tbody:nth-child(3)",
-            "row_object_template": {
+            "selector": ".col-sm-8 > div:nth-child(1) > div:nth-child(2) > table:nth-child(1) > tbody:nth-child(3)",
+            "template": {
                 "name": {
                     "selector": "td:nth-child(1)",
                     "regex_match": ".*(?=\n)"

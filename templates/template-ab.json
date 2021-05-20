@@ -15,60 +15,20 @@
         }
     },
     "template": {
-        "filing_date": {
-            "type": "single_field",
-            "selector": "td:nth-child(1)"
-        },
-        "termination_date": {
-            "type": "single_field",
-            "selector": "td:nth-child(2)"
-        },
-        "organization": {
-            "type": "single_field",
-            "selector": "td:nth-child(3)"
-        },
-        "client_name": {
-            "type": "single_field",
-            "selector": "td:nth-child(4)"
-        },
-        "designated_filer": {
-            "type": "single_field",
-            "selector": "td:nth-child(5)"
-        },
-        "dept_lobbied": {
-            "type": "single_field",
-            "selector": "td:nth-child(6)"
-        },
-        "govt_entity_lobbied": {
-            "type": "single_field",
-            "selector": "td:nth-child(7)"
-        },
-        "subject_matter": {
-            "type": "single_field",
-            "selector": "td:nth-child(8)"
-        },
-        "registration_number": {
-            "type": "single_field",
-            "selector": "td:nth-child(9)"
-        },
-        "lobbyist_type": {
-            "type": "single_field",
-            "selector": "td:nth-child(10)"
-        },
-        "lobbyists": {
-            "type": "single_field",
-            "selector": "td:nth-child(11)"
-        },
-        "registration_type": {
-            "type": "single_field",
-            "selector": "td:nth-child(12)"
-        },
-        "status": {
-            "type": "single_field",
-            "selector": "td:nth-child(13)"
-        },
+        "filing_date": "td:nth-child(1)",
+        "termination_date": "td:nth-child(2)",
+        "organization": "td:nth-child(3)",
+        "client_name": "td:nth-child(4)",
+        "designated_filer": "td:nth-child(5)",
+        "dept_lobbied": "td:nth-child(6)",
+        "govt_entity_lobbied": "td:nth-child(7)",
+        "subject_matter": "td:nth-child(8)",
+        "registration_number": "td:nth-child(9)",
+        "lobbyist_type": "td:nth-child(10)",
+        "lobbyists": "td:nth-child(11)",
+        "registration_type": "td:nth-child(12)",
+        "status": "td:nth-child(13)",
         "view_link": {
-            "type": "single_field",
             "selector": "td:nth-child(14) > a",
             "grab": "href"
         }

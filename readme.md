@@ -51,7 +51,8 @@ Templates files contain a few common, required components:
                     "selector": "",
                     "replace": "",                  // OPTIONAL: A string that will be passed through .replace() for this field. Useful for cleaning the data.
                 },
-                "field3": {
+                "field3": "",                       // Single fields can also be written as a string with the selector. Objects only need to be passed if you need access to their properties.
+                "field4": {
                     "type": "table",                // REQUIRED: Table types require some extra information. The table will return an array with each row in the table as subfield objects.
                     "row_selector": "",             // REQUIRED: The selector that corresponds to each row in the table. Should be relative to "unit".
                     "row_object_template": {        // REQUIRED: Defines how each subfield will look.

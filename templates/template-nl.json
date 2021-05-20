@@ -1,0 +1,66 @@
+{
+    "pagination": {
+        "pages": 48,
+        "records_per_page": 10,
+        "next_page_button": "#lbtNext"
+    },
+    "click_through": "a",
+    "unit": "#tblSearchResults > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(3) > tbody:nth-child(1) > tr",
+    "settings": {
+        "speed": 3,
+        "maximum_tries": 5,
+        "puppeteerOptions": {
+            "headless": false,
+            "slowMo": 0,
+            "defaultViewport": null
+        }
+    },
+    "template": {
+        "name": "#lblContactName",
+        "registration_number": "#lblRegistrationNumber",
+        "date_added": "#lblEffectiveDate",
+        "govt_funding": "div.panel:nth-child(2) > div:nth-child(2) > div:nth-child(1) > div:nth-child(6) > ul:nth-child(2)",
+        "status": "#lblstatus",
+        "organization": "#lblFirmName",
+        "description": "#lblOrgDesc",
+        "subject_matter": {
+            "type": "table",
+            "selector": "#tblSubjectMatter > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:not(:nth-child-3)",
+            "template": {
+                "subject_matter": "td:nth-child(1)",
+                "lobbied_during_period": "td:nth-child(2)",
+                "lobbying_next_period": "td:nth-child(3)"
+            }
+        },
+        "targets": {
+            "type": "table",
+            "selector": "#tblTargets > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:not(:nth-child-3)",
+            "template": {
+                "targets": "td:nth-child(1)",
+                "subject_matter": "td:nth-child(2)",
+                "categories": "td:nth-child(3)"
+            }
+        },
+        "communication_techniques": {
+            "type": "table",
+            "selector": "#tblCommTech > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:not(:nth-child-3)",
+            "template": {
+                "technique": "td:nth-child(1)",
+                "subject_matter": "td:nth-child(2)",
+                "categories": "td:nth-child(3)"
+            }
+        },
+        "lobbyists": {
+            "type": "table",
+            "selector": "#tblInHouseLobbyists > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:not(:nth-child-3)",
+            "template": {
+                "name": "td:nth-child(1)",
+                "effective_date": "td:nth-child(2)",
+                "inactive_date": "td:nth-child(3)"
+            }
+        }
+    },
+    "urls": [
+        "https://cado.eservices.gov.nl.ca/CadoInternet/Lobbyist/Menu.aspx"
+    ]
+}

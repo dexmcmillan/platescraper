@@ -1,0 +1,44 @@
+{
+    "pagination": {
+        "pages": 1
+    },
+    "click_through": "a",
+    "unit": ".results > tbody:nth-child(1) > tr:not(:first-child)",
+    "settings": {
+        "speed": 3,
+        "maximum_tries": 1,
+        "puppeteerOptions": {
+            "headless": false,
+            "slowMo": 0,
+            "defaultViewport": null
+        }
+    },
+    "template": {
+        "form": {
+            "type": "form",
+            "selector": "#mainColumn > table:nth-of-type(1) tr, #mainColumn > table:nth-of-type(2) tr, #mainColumn > table:nth-of-type(3) tr, #mainColumn > table:nth-of-type(4) tr"
+        },
+        "lobbyists": {
+            "type": "table",
+            "selector": "table.results:nth-child(5) tr",
+            "template": {
+                "name": "td:nth-of-type(1)",
+                "date_added": "td:nth-of-type(2)",
+                "date_inactivated": "td:nth-of-type(3)",
+                "lobbying_activities_link": {
+                    "selector": "td:nth-of-type(5) a",
+                    "grab": "href"
+                }
+            },
+            "govt_funding": {
+                "type": "table",
+                "selector": "table.results:nth-child(25) tr",
+                "template": {
+                    "govt_agency": "td:nth-of-type(1)",
+                    "amount": "td:nth-of-type(2)"
+                }
+            }
+        }
+    },
+    "urls": "https://registry.lobbyistregistrar.mb.ca/lra/reporting/public/advanceSearch.do"
+}
