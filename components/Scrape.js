@@ -60,7 +60,7 @@ class Scrape {
         }
 
         this.puppeteerOptions = template.settings.puppeteerOptions
-        this.pages = template.pages
+        this.pages = template.pagination.pages
         this.next_page_button = template.pagination.next_page_button
         this.unit = template.unit
         this.pages = template.pagination.pages
@@ -137,7 +137,7 @@ class Scrape {
 
                                 for (let pageNum = 1; pageNum <= this.pages; pageNum++) {
 
-                                    var records = await this.scrapePage(page)
+                                    await this.scrapePage(page)
 
                                     if (this.pages > 1 && pageNum !== this.pages) {
                                         try {
@@ -149,9 +149,10 @@ class Scrape {
                                         }
 
                                     }
-                                    await records.map(el => this.results.push(el))
+                                    
+                                    
                                 }
-                                console.log(`Found ${this.results.length} records...`)
+                                
                                 page.close()
                                 return resolve(JSON.stringify(this.results))
                             } catch (err) {
@@ -250,7 +251,7 @@ class Scrape {
                     regexp = new RegExp(field[1].regex_match, 'i');
                 }
                 else {
-                    regexp = /.*/i
+                    regexp = /[\s\S]*/i
                 }
 
                 if (typeof field[1] === "object") {
@@ -287,7 +288,6 @@ class Scrape {
                         
                         for (const row_field of Object.entries(field[1].template)) {
 
-                            
     
                             let selector = row_field[1]
                             let to_replace = undefined
@@ -333,7 +333,7 @@ class Scrape {
 
                 const rows = await page.$$(`${field[1].selector} tr`)
                 const spaceReplace = /\s/gi
-                const replace = /\t|\n/gi
+                const replace = /[\t]/gi
 
                 for (const row of rows) {
 
@@ -366,35 +366,37 @@ class Scrape {
 
 
         }
+        record.scrapedAt = new Date().toLocaleString()
         console.log(record)
         return record
     }
 
     async scrapePage(page) {
 
-        let pageResults = []
-
         if (this.click_through !== undefined) {
 
-            let rows = await page.$$(`${this.unit} ${this.click_through}`)
+            let units = await page.$$(`${this.unit} ${this.click_through}`)
 
-            for (let i = 1; i < rows.length; i++) {
+            for (let i = 1; i < units.length; i++) {
 
                 try {
                     await Promise.all([
                         page.click(`${this.unit}:nth-child(${i}) ${this.click_through}`),
                         page.waitForNavigation({ waitUntil: "networkidle0" })
                     ])
+
                     var record = await this.getRecord(page)
                         .catch(error => console.log(error))
                     
+                     this.results.push(record)
+                     console.log(`Found ${this.results.length} records...`)
     
                     await Promise.all([
                         page.goBack(),
                         page.waitForNavigation({ waitUntil: "networkidle0" })
                     ])
     
-                    rows = await page.$$(`${this.unit} ${this.click_through}`)
+                    units = await page.$$(`${this.unit} ${this.click_through}`)
                 } catch (err) {
                     console.log(err)
                     // Probably hit a header row in whatever table you're looking at.
@@ -409,13 +411,14 @@ class Scrape {
 
             for (const item of rows) {
                 var record = await this.getRecord(page, item)
+                await this.results.push(record)
+                console.log(`Found ${this.results.length} records...`)
             }
+
+            
 
         }
 
-        record.scrapedAt = new Date().toLocaleString()
-        pageResults.push(record)
-        return pageResults
     }
 
     async customCode() {

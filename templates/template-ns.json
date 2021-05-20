@@ -1,0 +1,65 @@
+{
+    "pagination": {
+        "pages": 54,
+        "records_per_page": 25,
+        "next_page_button": ".maintext > p:nth-child(6) > a:last-child"
+    },
+    "click_through": "a",
+    "unit": ".innertable > tbody:nth-child(1) > tr:not([bgcolor='#CCCCCC'])",
+    "settings": {
+        "speed": 3,
+        "maximum_tries": 5,
+        "puppeteerOptions": {
+            "headless": false,
+            "slowMo": 0,
+            "defaultViewport": null
+        }
+    },
+    "template": {
+        "registration_number": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(5) > td:nth-child(1)",
+        "status": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(5) > td:nth-child(2)",
+        "registration_date": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(7) > td:nth-child(1)",
+        "last_name": {
+            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(9) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1)",
+            "replace": "Lobbyist's Last Name"
+        },
+        "first_name": {
+            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(9) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2)",
+            "replace": "Lobbyist's First Name"
+        },
+        "firm_name": {
+            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(15) > td:nth-child(1)",
+            "replace": "Business or Firm Name for Lobbyist (if applicable)"
+        },
+        "business_description": {
+            "selector": "table.innertable:nth-child(9) > tbody:nth-child(1) > tr:nth-child(3) > td:nth-child(1)",
+            "replace": "Description of Employer's Business:"
+        },
+        "lobbying_activities": {
+            "type": "table",
+            "selector": "table.innertable:nth-child(11) > tbody:nth-child(1) > tr:nth-child(3) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:not(:first-child)",
+            "template": {
+                "description": "td:nth-of-type(1)",
+                "link": {
+                    "selector": "td:nth-of-type(2) a",
+                    "grab": "href"
+                }
+            }
+        },
+        "govt_funding": {
+            "type": "table",
+            "selector": "table.innertable:nth-child(13) > tbody:nth-child(1) > tr:nth-child(3) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:not(:first-child)",
+            "template": {
+                "agency_name": "td:nth-of-type(1)",
+                "amount": "td:nth-of-type(2)",
+                "link": {
+                    "selector": "td:nth-of-type(3) a",
+                    "grab": "href"
+                }
+            }
+        }
+        
+
+    },
+    "urls": "https://novascotia.ca/sns/lobbyist/search.asp?page=50&slt_searchType=all&txt_search=&RdStatus=all&RdType=all&dept_agency=0"
+}

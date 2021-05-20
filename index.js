@@ -17,6 +17,12 @@ function sk() {
     saskatchewan.run().catch()
 }
 
+function ns() {
+    const ns = new Scrape("template-ns")
+
+    ns.run().catch()
+}
+
 const nb = async function() {
     const newbrunswick = await new Scrape("template-nb")
 
