@@ -55,7 +55,6 @@ class Scrape {
             this.urlList = [template.urls]
         }
         else {
-            console.log("No problems here.")
             this.urlList = template.urls
         }
 
@@ -89,11 +88,8 @@ class Scrape {
         return new Promise(async (resolve) => {
 
             if (this.urlList.length === 0) {
-                console.log("Urls getter firing.")
                 await this.urls(this.urlParams.start, this.urlParams.selector)
             }
-
-            console.log(this.urlList)
 
             // Chunks urls for async scraping.
             const urlChunks = await _.chunk(urls, this.speed)
@@ -208,24 +204,17 @@ class Scrape {
             if (this.urlParams.pages > 1) {
                 await Promise.all([
                     page.click(this.urlParams.next_page_button),
-                    page.waitForNavigation({ waitUntil: "networkidle0" ,timeout: 5000})
+                    page.waitForNavigation({ waitUntil: "networkidle0" ,timeout: 10000})
                 ])
             }
             
 
-            const urls = await page.$$eval(`${this.unit} ${selector}`, array => {
+            const urls = await page.$$eval(`${selector}`, array => {
                 console.log(array.length)
                 return array.map(row => row.href)
             })
 
             await urls.forEach(item => this.urlList.push(item))
-
-            if (this.urlParams.pages > 1) {
-                await Promise.all([
-                    page.goBack(),
-                    page.waitForNavigation({ waitUntil: "networkidle0" ,timeout: 5000})
-                ])
-            }
         }
 
         browser.close()

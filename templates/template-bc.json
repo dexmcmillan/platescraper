@@ -1,11 +1,8 @@
 {
     "pagination": {
-        "pages": 19,
-        "records_per_page": 50,
-        "next_page_button": "#searchResultsTable_next > a:nth-child(1)"
+        "pages": 1
     },
-    "click_through": "a",
-    "unit": "ol.list-unstyled > li",
+    "unit": "body",
     "settings": {
         "speed": 3,
         "maximum_tries": 5,
@@ -56,7 +53,10 @@
             }
         }
     },
-    "urls": [
-        "https://www.lobbyistsregistrar.bc.ca/app/secure/orl/lrs/do/clntSmmrySrch?V_SEARCH.command=refineCategory&V_TOKEN=1234567890&V_SEARCH.scopeCategory=solr.facetName.activityStatus%3D6"
-    ]
+    "urls": {
+        "start": "https://www.lobbyistsregistrar.bc.ca/app/secure/orl/lrs/do/clntSmmrySrch?V_SEARCH.command=refineCategory&V_TOKEN=1234567890&V_SEARCH.scopeCategory=solr.facetName.activityStatus%3D6",
+        "pages": 19,
+        "next_page_button": "span.pull-right:nth-child(2) > ul:nth-child(1) > li:last-child > a:nth-child(1)",
+        "selector": "ol.list-unstyled > li > div:nth-child(4) > span:nth-child(6) > a:nth-child(1)"
+    }
 }

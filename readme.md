@@ -164,7 +164,7 @@ A urls object can also be passed, which specifies how urls should be collected b
     "start": "",                        // The url where the scrape should start collecting urls from.
     "pages": 1,                         // How many pages the urls are contained within.
     "next_page_button": "",             // If they are contained in more than one page, this css selector corresponds to the "next page" button.
-    "selector": "a"                     // A css selector coresponding to each link that is to be grabbed. Should be relative to the unit property of your template file.
+    "selector": "a"                     // A css selector coresponding to each link that is to be grabbed. Should NOT be relative to the unit property of your template file.
 }
 ```
 
