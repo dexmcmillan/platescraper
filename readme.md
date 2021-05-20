@@ -168,5 +168,54 @@ A urls object can also be passed, which specifies how urls should be collected b
 }
 ```
 
+### Example template
+
+```json
+{
+    "pagination": {
+        "pages": 1,
+        "next_page_button": ""
+    },
+    "click_through": "",
+    "unit": "body",
+    "settings": {
+        "speed": 3,
+        "maximum_tries": 5,
+        "puppeteerOptions": {
+            "headless": false,
+            "slowMo": 0,
+            "defaultViewport": null
+        }
+    },
+    "template": {
+        "field1": "",
+        "field2": {
+            "type": "single_field",
+            "selector": ""
+        },
+        "field3": {
+            "type": "table",
+            "selector": "",
+            "template": {
+                "subfield1": "",
+                "subfield2": "",
+                "subfield3": {
+                    "selector": "td:nth-child(1)",
+                    "regex_match": ".*(?=\n)",
+                    "replace": "\n"
+                },
+            }
+        },
+        "name_irrelevant": {
+            "type": "form",
+            "selector": ""
+        }
+    },
+    "urls": [
+        ""
+    ]
+}
+```
+
 # Project to-dos
 * Implement error handling for poorly formatted templates.

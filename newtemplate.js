@@ -6,7 +6,6 @@ const fs = require('fs')
 const blanktemplate = {
     "pagination": {
         "pages": 1,
-        "records_per_page": 50,
         "next_page_button": ""
     },
     "click_through": "",
@@ -21,19 +20,15 @@ const blanktemplate = {
         }
     },
     "template": {
-        "field1": {
-            "type": "single_field",
-            "selector": ".centerAdmin > h2:nth-child(3)",
-            "regex_match": "(?<= / ).*(?=,)"
-        },
+        "field1": "",
         "field2": {
             "type": "single_field",
             "selector": ""
         },
         "field3": {
             "type": "table",
-            "row_selector": "",
-            "row_object_template": {
+            "selector": "",
+            "template": {
                 "subfield1": "",
                 "subfield2": "",
                 "subfield3": {
