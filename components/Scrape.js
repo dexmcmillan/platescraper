@@ -213,7 +213,7 @@ class Scrape {
             }
             
 
-            const urls = await page.$$eval(selector, array => {
+            const urls = await page.$$eval(`${this.unit} ${selector}`, array => {
                 console.log(array.length)
                 return array.map(row => row.href)
             })
