@@ -40,13 +40,11 @@ const nb = async function() {
 
 const ab = async function() {
     const alberta = await new Scrape("template-ab")
-
     alberta.run().catch()
 }
 
 const bc = async function() {
     const bc = await new Scrape("template-bc")
-
     bc.run().catch()
 }
 

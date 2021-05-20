@@ -8,11 +8,31 @@ Platescraper is designed with three guiding principles in mind:
 * Those with only basic understanding of Javascript should be able to write scrape templates.
 * Others should be able to see how the data is gathered **by viewing only one JSON file**.
 
-Platescraper is useful for one of three common scrape jobs:
+Platescraper is useful for one of three common scrape patterns:
 
 * Scraping one page that contains all the data you need.
 * Scraping many pages with unique urls but identical structure.
 * Scraping tabular data from paginated web apps.
+
+## Under the hood
+Templates are stored in the templates folder, and should be appended with "template-". In index.js, a function should be created that can be run using `plate scrape FUNCTIONNAME`.
+
+It's up to the user to define functions to be run. The most basic implementation of a scrape is:
+
+```javascript
+const example = async function() {
+    const example = await new Scrape("template-example")
+    example.run().catch()
+}
+```
+
+..then...
+
+```shell
+plate scrape example
+```
+
+This function will look for the file name passed to the Scrape class and execute the scrape using the template file as a guide.
 
 ## The template file
 
