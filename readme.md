@@ -14,7 +14,7 @@ Platescraper is useful for one of three common scrape patterns:
 * Scraping many pages with unique urls but identical structure.
 * Scraping tabular data from paginated web apps.
 
-## Under the hood
+## Implementation
 Templates are stored in the templates folder, and should be appended with "template-". In index.js, a function should be created that can be run using `plate scrape FUNCTIONNAME`.
 
 It's up to the user to define functions to be run. The most basic implementation of a scrape is:
@@ -33,6 +33,24 @@ plate scrape example
 ```
 
 This function will look for the file name passed to the Scrape class and execute the scrape using the template file as a guide.
+
+## Defining custom scrape behaviour
+
+The Scrape class allows for injection of custom code in two spots in your index.js implementation:
+
+```javascript
+Scrape.customCode() = function () {
+    // Some custom behaviour here.
+    // This will run immediately after each url is loaded.
+}
+
+Scrape.customUrlCode() = function () {
+    // Some custom behaviour here.
+    // This will run immediately after the url object (see below) begins harvesting urls for use in the scrape.
+}
+```
+
+These functions are useful for any navigation events that must occur before data can be scraped. For example, for some web apps that do not pass data through the url, you may need to click "search" after navigating to the url but before the scrape begins.
 
 ## The template file
 
