@@ -1,7 +1,6 @@
 {
     "pagination": {
         "pages": 57,
-        "records_per_page": 15,
         "next_page_button": "#apexir_DATA_PANEL > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > span:nth-child(1) > a:last-child"
     },
     "unit": "#apexir_DATA_PANEL tr tr:not(:first-child):not(:last-child)",

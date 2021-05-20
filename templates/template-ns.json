@@ -1,7 +1,6 @@
 {
     "pagination": {
         "pages": 54,
-        "records_per_page": 25,
         "next_page_button": ".maintext > p:nth-child(6) > a:last-child"
     },
     "click_through": "a",

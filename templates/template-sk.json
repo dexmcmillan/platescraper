@@ -1,7 +1,6 @@
 {
     "pagination": {
         "pages": 5,
-        "records_per_page": 15,
         "next_page_button": "#searchResultsTable_next > a:nth-child(1)"
     },
     "click_through": "button",

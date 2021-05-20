@@ -1,9 +1,6 @@
 {
-    "pages": 1,
     "pagination": {
-        "pages": 1,
-        "records_per_page": 15,
-        "next_page_button": "#apexir_DATA_PANEL > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > span:nth-child(1) > a:last-child"
+        "pages": 1
     },
     "next_page_button": "",
     "unit": "body",

@@ -1,7 +1,6 @@
 {
     "pagination": {
         "pages": 48,
-        "records_per_page": 10,
         "next_page_button": "#lbtNext"
     },
     "click_through": "a",
