@@ -3,11 +3,13 @@
 ***Platescraper turns JSON scrape templates into the data you want.***
 
 Platescraper is designed with three guiding principles in mind:
+
 * You should be able to execute common scrape patterns with minimal duplicated effort.
 * Those with only basic understanding of Javascript should be able to write scrape templates.
-* Others should be able to see how the data was gathered **by viewing one JSON file**.
+* Others should be able to see how the data is gathered **by viewing only one JSON file**.
 
 Platescraper is useful for one of three common scrape jobs:
+
 * Scraping one page that contains all the data you need.
 * Scraping many pages with unique urls but identical structure.
 * Scraping tabular data from paginated web apps.
