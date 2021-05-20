@@ -1,6 +1,8 @@
 # Platescraper
 
-An app that turns JSON scrape templates into the data you want, Platescraper is designed with three guiding principles in mind:
+***Platescraper turns JSON scrape templates into the data you want.***
+
+Platescraper is designed with three guiding principles in mind:
 * You should be able to execute common scrape patterns with minimal duplicated effort.
 * Those with only basic understanding of Javascript should be able to write scrape templates.
 * Others should be able to see how the data was gathered **by viewing one JSON file**.
