@@ -19,9 +19,9 @@ Platescraper is useful for one of three common scrape jobs:
 Each template file contains all the information needed to understand the general logic of the scrape, except for one critical piece (explained below).
 
 ### settings
-*accepts*: object
+**accepts**: object
 
-*required?*: yes
+**required?**: yes
 
 The settings object contains information that controls overall behaviour of the scrape, including options that are passed to Puppeteer.
 
@@ -38,9 +38,9 @@ The settings object contains information that controls overall behaviour of the 
 ```
 
 ### pagination
-*accepts*: object
+**accepts**: object
 
-*required?*: yes
+**required?**: yes
 
 The pagination object contains information about how many pages your records will be scraped from. It contains two fields:
 
@@ -52,25 +52,25 @@ The pagination object contains information about how many pages your records wil
 ```
 
 ### unit
-*accepts*: css selector
+**accepts**: css selector
 
-*required?*: no
+**required?**: no
 
 The unit property will default to "body" unless another css selector is passed. This specifies the highest-level unit from which all the information for one record is contained.
 
 For example, in tables where each row contains all the information required for one record, the unit may be "table > tbody > tr". For situations where there is one record per page, the unit should be "body".
 
 ### click_through
-*accepts*: css selector
+**accepts**: css selector
 
-*required?*: no
+**required?**: no
 
 If click_through is specified, each record will not be found on the original url that is navigated to, but instead from a page that is reached by clicking on this selector. This selector should be relative to the unit specified. Platescraper will then iterate through those links and gather information based on your template from the next page.
 
 ### template
-*accepts*: object
+**accepts**: object
 
-*required?*: yes
+**required?**: yes
 
 The heart of a platescraper template file. This specifies how each record in your final JSON output will look, as well as where and how platescraper should look for each field of your record.
 
@@ -113,9 +113,9 @@ There are three types of fields:
 ```
 
 ### urls
-*accepts*: object or string
+**accepts**: object or string
 
-*required?*: yes
+**required?**: yes
 
 If a simple url string is passed, the scraper will use it as a starting point to handle pagination. If an array is passed, it will loop through each and collect records according to the template above (this is common if you have several pages that all have the same structure and all contain one record).
 
