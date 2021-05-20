@@ -88,7 +88,7 @@ class Scrape {
         
         return new Promise(async (resolve) => {
 
-            if (this.urlList === undefined) {
+            if (this.urlList.length === 0) {
                 console.log("Urls getter firing.")
                 await this.urls(this.urlParams.start, this.urlParams.selector)
             }
@@ -186,20 +186,8 @@ class Scrape {
     }
 
     async urls(url, selector=this.urlParams.selector) {
-        
-        var urls = await this.getUrls(url, selector)
-        
-        urls.map(el => this.urlList.push(el))
-        console.log(this.urlList)
-        return this.urlList
 
-    }
-
-    async getUrls(url, selector) {
-
-        let allUrls = []
-
-        console.log("Grabbing urls...")
+        console.log(`Grabbing urls from: ${this.urlParams.start}...`)
 
         // New puppeteer browser instance.
         const browser = await p.launch(this.puppeteerOptions);
@@ -229,9 +217,7 @@ class Scrape {
                 return array.map(row => row.href)
             })
 
-            console.log(urls.length)
-
-            await urls.forEach(item => allUrls.push(item))
+            await urls.forEach(item => this.urlList.push(item))
 
             if (this.urlParams.pages > 1) {
                 await Promise.all([
@@ -242,7 +228,8 @@ class Scrape {
         }
 
         browser.close()
-        return allUrls
+        console.log(`Found ${this.urlList.length} urls.`)
+        return this.urlList
 
     }
 
@@ -295,11 +282,12 @@ class Scrape {
                 record[field[0]] = []
 
                 for (const row of rows) {
+                    let subfield = {}
                     try {
                         
                         for (const row_field of Object.entries(field[1].template)) {
 
-                            let subfield = {}
+                            
     
                             let selector = row_field[1]
                             let to_replace = undefined
@@ -330,9 +318,9 @@ class Scrape {
                             } else if (grab === "href") {
                                 subfield[row_field[0]] = await row.$eval(selector, el => el.href)
                             }
-                            record[field[0]].push(subfield) 
+                             
                         }
-                         
+                        record[field[0]].push(subfield)
                     } catch(err) {
                         console.log(err)
                         // Probably a table that exists but is empty.
@@ -432,13 +420,13 @@ class Scrape {
 
     async customCode() {
         // Custom code to start the run() scrape goes here...
-        console.log("Custom code executing...")
+        console.log("No custom code to run.")
 
     }
 
     async customUrlCode() {
         // Custom code to start the url() scrape goes here...
-        console.log("Custom url code executing...")
+        console.log("No custom code to run for url scraping.")
 
     }
 

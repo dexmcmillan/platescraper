@@ -20,9 +20,6 @@ function sk() {
 const nb = async function() {
     const newbrunswick = await new Scrape("template-nb")
 
-    const url = "https://www.pxw1.snb.ca/snb9000/product.aspx?productid=A001PLOBBYSearch&l=e"
-    const selector = "#ContentDeliveryDiv > table:nth-child(4) > tbody:nth-child(1) > tr:not(:first-child) > td:nth-child(6) > a:nth-child(1)"
-
     const customFunction = async function(page) {
         await Promise.all([
             page.click('#_ctl4_btnSubmit'),
@@ -32,11 +29,7 @@ const nb = async function() {
 
     newbrunswick.customUrlCode = customFunction
 
-    newbrunswick.urls(url, selector)
-    .then(res => {
-        console.log("Done scraping urls!")
-        return newbrunswick.run(res)
-    }).catch()
+    newbrunswick.run().catch()
 }
 
 const ab = async function() {
