@@ -48,6 +48,11 @@ const bc = async function() {
     bc.run().catch()
 }
 
+const example = async function() {
+    const example = await new Scrape("template-example")
+    example.run().catch()
+}
+
 const mb = async function() {
 
     const mb = await new Scrape("template-mb")
@@ -80,15 +85,21 @@ const nl = async function() {
 
     const customFunction = async function(page) {
 
-        await page.waitForNavigation()
+        // await page.keyboard.press('Enter')
+        // await page.waitForSelector("#tblMain > tbody > tr > td:nth-child(1) > table > tbody > tr > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > a")
+
+        await Promise.all([
+            page.click('#tblMain > tbody > tr > td:nth-child(1) > table > tbody > tr > td > table > tbody > tr:nth-child(2) > td:nth-child(1) > a'),
+            page.waitForNavigation()
+        ])
 
         await Promise.all([
             page.click('#btnSearchAll'),
-            page.waitForSelector('#trSearchResultsRecords')
+            page.waitForNavigation()
         ])
     }
 
-    nl.customUrlCode = customFunction
+    nl.customCode = customFunction
     
 
     nl.run().catch()

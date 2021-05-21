@@ -1,8 +1,8 @@
 {
-    "template_name": "doctor",
-    "pages": 1,
-    "next_page_button": "",
-    "unit": "",
+    "pagination": {
+        "pages": 1
+    },
+    "unit": "body",
     "settings": {
         "speed": 3,
         "maximum_tries": 5,
@@ -31,8 +31,8 @@
         },
         "specialties": {
             "type": "table",
-            "table_selector": "#specialties > table:nth-child(2) > tbody > tr",
-            "row_object_template": {
+            "selector": "#specialties > table:nth-child(2) > tbody > tr",
+            "template": {
                 "specialty": "td:nth-child(1)",
                 "issued_on": "td:nth-child(2)",
                 "type": "td:nth-child(3)"

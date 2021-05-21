@@ -5,6 +5,9 @@ const { reject } = require('lodash')
 
 class Scrape {
 
+    browser
+    page
+
     results = []
 
     // Urls will be loaded into here on object construction.
@@ -49,6 +52,8 @@ class Scrape {
         this.maximum_tries = template.settings.maximum_tries
         this.speed = template.settings.speed
 
+        this.save_as = `./output/${templateName.replace("template", "data")}.json`
+
         if (template.urls.start !== undefined) {
             this.urlParams = template.urls
         } else if (typeof template.urls === "string") {
@@ -59,11 +64,21 @@ class Scrape {
         }
 
         this.puppeteerOptions = template.settings.puppeteerOptions
-        this.pages = template.pagination.pages
-        this.next_page_button = template.pagination.next_page_button
+        try {
+            this.pages = template.pagination.pages
+        }
+        catch {
+            // No pages defined in template, which is fine.
+            this.pages = 1
+        }
+        try {
+            this.next_page_button = template.pagination.next_page_button
+        }
+        catch {
+            this.next_page_button = undefined
+        }
+        
         this.unit = template.unit
-        this.pages = template.pagination.pages
-        this.records_per_page = template.pagination.records_per_page
 
         if (this.unit === undefined || this.unit === "") {
             this.unit = "body"
@@ -71,155 +86,175 @@ class Scrape {
 
         this.click_through = template.click_through
 
-        this.save_as = `./output/${templateName.replace("template", "data")}.json`
-        this.save_stream = fs.createWriteStream(`${this.save_as}`)
-
         this.start_time = new Date().toLocaleString()
         console.log(`New scrape started at ${this.start_time}\nBased on template: ${this.template_name}.`)
-        
+
 
         return this
     }
 
     // This method is one of the primary methods for scraping pages.
     // It takes an array of urls and goes through each of them asynchronously (with limits) to grab information.
-    async run(urls = this.urlList) {
-        
+    async run() {
+
         return new Promise(async (resolve) => {
 
-            if (this.urlList.length === 0) {
-                await this.urls(this.urlParams.start, this.urlParams.selector)
-            }
+            await this.urls()
 
-            // Chunks urls for async scraping.
-            const urlChunks = await _.chunk(urls, this.speed)
+            await this.scrape()
 
-            // New puppeteer browser instance.
-            const browser = await p.launch(this.puppeteerOptions);
+            await this.save()
 
-            // For each one of the url chunks...
-            for (const chunk of urlChunks) {
-
-                const promises = []
-                let timesFailed = 0
-
-                // ...go through each url.
-                chunk.forEach(url => {
-
-                    // ...create a new promise to grab the required info from the scrape template...
-                    const promise = new Promise(async (resolve, reject) => {
-                        while (timesFailed < this.maximum_tries) {
-
-                            
-
-                            const page = await browser.newPage();
-                            await page.exposeFunction('getRecord', this.getRecord);
-
-                            await Promise.all([
-                                page.goto(url),
-                                page.waitForNavigation({ waitUntil: "networkidle0" })
-                            ])
-
-                            await this.customCode(page)
-
-                            try {
-
-                                if (typeof this.pages === "string") {
-                                    this.pages = await page.$eval(this.pages, el => el.innerText)
-                                    
-                                } else if (typeof this.pages === "number") {
-                                    this.pages = this.pages
-                                }
-
-                                for (let pageNum = 1; pageNum <= this.pages; pageNum++) {
-
-                                    await this.scrapePage(page)
-
-                                    if (this.pages > 1 && pageNum !== this.pages) {
-                                        try {
-                                            await Promise.all([
-                                                page.click(this.next_page_button),
-                                                page.waitForNavigation({ waitUntil: "networkidle0", timeout: 3000 })
-                                            ])
-                                        } catch {
-                                        }
-
-                                    }
-                                    
-                                    
-                                }
-                                
-                                page.close()
-                                return resolve(JSON.stringify(this.results))
-                            } catch (err) {
-                                console.log(err)
-                                await page.close()
-                                timesFailed++
-                                console.log(`Times failed: ${timesFailed}.`)
-                                reject("ERROR: Scrape failed too many times.")
-                            }
-
-                        }
-                    }).catch(error => console.log(error))
-
-                    promises.push(promise)
-
-                })
-
-                await Promise.all(promises)
-
-            }
-            browser.close()
-
-            const stringifiedResults = JSON.stringify(this.results)
-            this.save_stream.write(stringifiedResults)
-
-            this.end_time = new Date()
-            this.duration = Math.round(((this.end_time - this.start_time)/1000),1)
-
-            
             return resolve(this.results)
         })
     }
 
-    async urls(url, selector=this.urlParams.selector) {
-
-        console.log(`Grabbing urls from: ${this.urlParams.start}...`)
+    async navigate() {
 
         // New puppeteer browser instance.
-        const browser = await p.launch(this.puppeteerOptions);
-        const page = await browser.newPage();
+        this.browser = await p.launch(this.puppeteerOptions);
 
-        page.on('console', consoleObj => console.log(`CONSOLE MESSAGE: ${consoleObj.text()}`));
+        return this
 
-        await Promise.all([
-            page.goto(url),
-            page.waitForNavigation({ waitUntil: "networkidle0" })
-        ])
+    }
 
-        await this.customUrlCode(page)
+    async scrape() {
+        
+        this.browser = await p.launch(this.puppeteerOptions);
+        // Chunks urls for async scraping.
+        const urlChunks = await _.chunk(this.urlList, this.speed)
 
-        for (let pageNum = 1; pageNum <= this.urlParams.pages; pageNum++) {
+        // For each one of the url chunks...
+        for (const chunk of urlChunks) {
 
-            if (this.urlParams.pages > 1) {
-                await Promise.all([
-                    page.click(this.urlParams.next_page_button),
-                    page.waitForNavigation({ waitUntil: "networkidle0" ,timeout: 10000})
-                ])
-            }
-            
+            const promises = []
+            let timesFailed = 0
 
-            const urls = await page.$$eval(`${selector}`, array => {
-                console.log(array.length)
-                return array.map(row => row.href)
+            // ...go through each url.
+            chunk.forEach(url => {
+
+                // ...create a new promise to grab the required info from the scrape template...
+                const promise = new Promise(async (resolve, reject) => {
+
+                    while (timesFailed < this.maximum_tries) {
+                        
+
+                        const page = await this.browser.newPage();
+
+                        await Promise.all([
+                            page.goto(url),
+                            page.waitForNavigation({ waitUntil: "networkidle0" })
+                        ])
+
+                        await this.customCode(page)
+
+                        try {
+
+                            if (typeof this.pages === "string") {
+                                this.pages = await page.$eval(this.pages, el => el.innerText)
+
+                            } else if (typeof this.pages === "number") {
+                                this.pages = this.pages
+                            }
+
+                            for (let pageNum = 1; pageNum <= this.pages; pageNum++) {
+
+                                await this.scrapePage(page)
+
+                                if (this.pages > 1 && pageNum !== this.pages) {
+                                    await Promise.all([
+                                        page.click(this.next_page_button),
+                                        page.waitForNavigation({ waitUntil: "networkidle0", timeout: 30000 })
+                                    ]).catch(console.log("Navigation failed."))
+
+                                }
+
+
+                            }
+
+                            page.close()
+                            return resolve(JSON.stringify(this.results))
+                        } catch (err) {
+                            console.log(err)
+                            await page.close()
+                            timesFailed++
+                            console.log(`Times failed: ${timesFailed}.`)
+                            reject("ERROR: Scrape failed too many times.")
+                        }
+
+                    }
+                }).catch(error => console.log(error))
+
+                promises.push(promise)
+
             })
 
-            await urls.forEach(item => this.urlList.push(item))
+            await Promise.all(promises)
+
+        }
+        this.browser.close()
+        return this
+    }
+
+    async save() {
+        const stringifiedResults = JSON.stringify(this.results)
+
+        this.save_stream = await fs.createWriteStream(`${this.save_as}`)
+
+        this.save_stream.write(stringifiedResults)
+
+        this.end_time = new Date()
+        this.duration = Math.round(((this.end_time - this.start_time) / 1000), 1)
+
+        return this.results
+
+    }
+
+    async urls() {
+
+        if (this.urlList.length === 0) {
+            console.log(`Grabbing urls from: ${this.urlParams.start}...`)
+
+            // New puppeteer browser instance.
+            this.browser = await p.launch(this.puppeteerOptions);
+            const page = await this.browser.newPage();
+
+            page.on('console', consoleObj => console.log(`CONSOLE MESSAGE: ${consoleObj.text()}`));
+
+            await Promise.all([
+                page.goto(this.urlParams.start),
+                page.waitForNavigation({ waitUntil: "networkidle0" })
+            ])
+
+            await this.customUrlCode(page)
+
+            for (let pageNum = 1; pageNum <= this.urlParams.pages; pageNum++) {
+
+                if (this.urlParams.pages > 1) {
+                    await Promise.all([
+                        page.click(this.urlParams.next_page_button),
+                        page.waitForNavigation({ waitUntil: "networkidle0", timeout: 30000 })
+                    ])
+                }
+
+
+                const urls = await page.$$eval(`${this.urlParams.selector}`, array => {
+                    return array.map(row => row.href)
+                })
+
+                await urls.forEach(item => this.urlList.push(item))
+            }
+
+            await this.browser.close()
+            console.log(`Found ${this.urlList.length} urls.`)
+
+
+        }
+        else {
+            console.log("Urls list already passed. No need to scrape.")
         }
 
-        browser.close()
-        console.log(`Found ${this.urlList.length} urls.`)
-        return this.urlList
+        return this
 
     }
 
@@ -260,7 +295,7 @@ class Scrape {
                 } else if (grab === "href") {
                     record[field[0]] = await item.$eval(`${selector}`, el => el.href)
                 }
-                    
+
             }
 
 
@@ -274,30 +309,30 @@ class Scrape {
                 for (const row of rows) {
                     let subfield = {}
                     try {
-                        
+
                         for (const row_field of Object.entries(field[1].template)) {
 
-    
+
                             let selector = row_field[1]
                             let to_replace = undefined
                             let grab = undefined
-                            
+
                             if (row_field[1].regex_match !== undefined) {
                                 var row_regexp = new RegExp(row_field[1].regex_match, 'i');
                             }
                             else {
                                 row_regexp = /.*/i
                             }
-                            
+
                             if (typeof row_field[1] === "object") {
                                 selector = row_field[1].selector
                                 to_replace = row_field[1].replace
                                 grab = row_field[1].grab
-                                
+
                             }
 
-    
-                            
+
+
                             if (grab === "text" || grab === undefined) {
                                 subfield[row_field[0]] = await row.$eval(selector, el => el.innerText)
                                 subfield[row_field[0]] = subfield[row_field[0]].match(row_regexp)[0].replace(to_replace, "")
@@ -307,20 +342,20 @@ class Scrape {
                             } else if (grab === "href") {
                                 subfield[row_field[0]] = await row.$eval(selector, el => el.href)
                             }
-                             
+
                         }
                         record[field[0]].push(subfield)
-                    } catch(err) {
+                    } catch (err) {
                         console.log(err)
                         // Probably a table that exists but is empty.
                     }
-                    
+
 
                 }
             }
             else if (field[1].type === "form") {
 
-                const rows = await page.$$(`${field[1].selector} tr`)
+                const rows = await page.$$(`${field[1].selector}`)
                 const spaceReplace = /\s/gi
                 const replace = /[\t]/gi
 
@@ -341,12 +376,12 @@ class Scrape {
                             record[key] = await row.$eval("td:nth-of-type(2) *", el => el.href)
                         }
                         record[key] = record[key].replace(replace, " ")
-                    } catch(err) {
+                    } catch (err) {
                         console.log(err)
                     }
 
-                    
-                    
+
+
 
 
                 }
@@ -376,22 +411,22 @@ class Scrape {
 
                     var record = await this.getRecord(page)
                         .catch(error => console.log(error))
-                    
-                     this.results.push(record)
-                     console.log(`Found ${this.results.length} records...`)
-    
+
+                    this.results.push(record)
+                    console.log(`Found ${this.results.length} records...`)
+
                     await Promise.all([
                         page.goBack(),
                         page.waitForNavigation({ waitUntil: "networkidle0" })
                     ])
-    
+
                     units = await page.$$(`${this.unit} ${this.click_through}`)
                 } catch (err) {
                     console.log(err)
                     // Probably hit a header row in whatever table you're looking at.
                 }
-                
-                
+
+
             }
 
         } else {
@@ -404,7 +439,7 @@ class Scrape {
                 console.log(`Found ${this.results.length} records...`)
             }
 
-            
+
 
         }
 

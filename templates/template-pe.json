@@ -8,7 +8,7 @@
         "speed": 3,
         "maximum_tries": 5,
         "puppeteerOptions": {
-            "headless": true,
+            "headless": false,
             "slowMo": 0,
             "defaultViewport": null
         }
