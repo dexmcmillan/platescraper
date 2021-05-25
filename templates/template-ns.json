@@ -19,20 +19,24 @@
         "status": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(5) > td:nth-child(2)",
         "registration_date": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(7) > td:nth-child(1)",
         "last_name": {
-            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(9) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1)",
-            "replace": "Lobbyist's Last Name"
+            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1)",
+            "regex_match": "(?<=Last Name\n).*(?=\t)"
         },
         "first_name": {
-            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(9) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(2)",
-            "replace": "Lobbyist's First Name"
+            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1)",
+            "regex_match": "(?<=First Name\n).*(?=\t)"
         },
         "firm_name": {
-            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1) > tr:nth-child(15) > td:nth-child(1)",
-            "replace": "Business or Firm Name for Lobbyist (if applicable)"
+            "selector": "table.innertable:nth-of-type(1) > tbody:nth-child(1)",
+            "regex_match": "(?<=Firm Name for Lobbyist \\(if applicable\\)\n).*"
         },
         "business_description": {
             "selector": "table.innertable:nth-child(9) > tbody:nth-child(1) > tr:nth-child(3) > td:nth-child(1)",
-            "replace": "Description of Employer's Business:"
+            "regex_match": "Description of Employer's Business:"
+        },
+        "business_name": {
+            "selector": "table.innertable:nth-child(9) > tbody:nth-child(1)",
+            "regex_match": "(?<=Lobbying on behalf of).*"
         },
         "lobbying_activities": {
             "type": "table",

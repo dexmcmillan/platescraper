@@ -20,6 +20,22 @@ function sk() {
 function ns() {
     const ns = new Scrape("template-ns")
 
+    const customFunction = async function(page) {
+
+        const searchButton = '.maintext > form:nth-child(5) > p:nth-child(1) > input:nth-child(3)'
+        const radioButton = ".small > span:nth-child(3) > input:nth-child(1)"
+
+        await page.$eval(radioButton, el => el.checked = "")
+
+        await Promise.all([
+            page.click(searchButton),
+            page.waitForNavigation({ waitUntil: 'networkidle0' })
+        ])
+
+    }
+
+    mb.customCode = customFunction
+
     ns.run().catch()
 }
 
