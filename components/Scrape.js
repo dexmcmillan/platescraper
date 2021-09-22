@@ -321,11 +321,16 @@ class Scrape {
                                 var row_regexp = new RegExp(row_field[1].regex_match, 'i');
                             }
                             else {
-                                row_regexp = /.*/i
+                                row_regexp = /[\s\S]*/i
                             }
 
                             if (typeof row_field[1] === "object") {
-                                selector = row_field[1].selector
+                                if (row_field[1].selector === "") {
+                                    selector = "*"
+                                } else {
+                                    selector = row_field[1].selector
+                                }
+                                
                                 to_replace = row_field[1].replace
                                 grab = row_field[1].grab
 
@@ -335,6 +340,7 @@ class Scrape {
 
                             if (grab === "text" || grab === undefined) {
                                 subfield[row_field[0]] = await row.$eval(selector, el => el.innerText)
+                                console.log(subfield[row_field[0]])
                                 subfield[row_field[0]] = subfield[row_field[0]].match(row_regexp)[0].replace(to_replace, "")
                             } else if (grab === "value") {
                                 subfield[row_field[0]] = await row.$eval(selector, el => el.value)
